@@ -1,5 +1,6 @@
 package ca.mcgill.cranki.features;
 
+import ca.mcgill.cranki.controller.TodoItemController;
 import ca.mcgill.cranki.dto.TodoItemDto;
 import ca.mcgill.cranki.model.TodoItem;
 import ca.mcgill.cranki.repository.TodoItemRepository;
@@ -25,6 +26,12 @@ public class markTodoStatusStepDefs {
     @Autowired
     private TodoItemRepository todoItemRepository;
 
+    @Autowired
+    private TodoItemController todoItemController;
+
+    private ResponseEntity<String> controllerResponse;
+    private String error;
+
     private void clearDatabase(){
         todoItemRepository.deleteAll();
     }
@@ -32,6 +39,8 @@ public class markTodoStatusStepDefs {
     @Given("I have the following todos in my todo list:")
     public void iHaveTheFollowingTodosInMyTodoList(DataTable existingItems) {
         clearDatabase();
+
+        error = "";
 
         List<Map<String, String>> rows = existingItems.asMaps();
         for (var row: rows) {
@@ -50,26 +59,13 @@ public class markTodoStatusStepDefs {
     @When("I mark {string} as DONE")
     public void iMarkAsDone(String arg0) {
         TodoItem item = todoItemRepository.getByName(arg0);
-
-        String url = UriComponentsBuilder
-                .fromHttpUrl("http://localhost:8080")
-                .path("/todoItem/updateStatus")
-                .queryParam("id", 1)
-                .queryParam("status", "DONE")
-                .encode()
-                .toUriString();
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        String body = "";
-
-        HttpEntity<String> entity = new HttpEntity<>(body, headers);
-        System.out.println("BEFORE BFORE BFORE: " + todoItemRepository.getByName(arg0).getStatus());
-        ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
-        HttpStatusCode httpStatus = responseEntity.getStatusCode();
-        int status = httpStatus.value();
-        String response = responseEntity.getBody();
-        System.out.println("AFTER AFTER AFTER: " + todoItemRepository.getByName(arg0).getStatus() + " " + status + response);
+        int id;
+        if (item != null){
+            id = item.getId();
+        } else {
+            id = 99;
+        }
+        controllerResponse = todoItemController.updateTodoStatus(id, "DONE");
     }
 
     @Then("the status of {string} should be {string}")
@@ -78,19 +74,29 @@ public class markTodoStatusStepDefs {
         assertEquals(TodoItem.TodoStatus.valueOf(arg1), item.getStatus());
     }
 
-    @And("the tatus of {string} should be {string}")
-    public void theTatusOfShouldBe(String arg0, String arg1) {
-    }
-
     @When("I mark {string} as IN_PROGRESS")
     public void iMarkAsInProgress(String arg0) {
+        TodoItem item = todoItemRepository.getByName(arg0);
+        int id;
+        if (item != null){
+           id = item.getId();
+        } else {
+            id = 99;
+        }
+        controllerResponse = todoItemController.updateTodoStatus(id, "IN_PROGRESS");
     }
 
     @Then("the status of {string} should remain {string}")
     public void theStatusOfShouldRemain(String arg0, String arg1) {
+        TodoItem item = todoItemRepository.getByName(arg0);
+        assertEquals(TodoItem.TodoStatus.valueOf(arg1), item.getStatus());
     }
 
     @And("I should see an error message {string}")
     public void iShouldSeeAnErrorMessage(String arg0) {
+        assertEquals(400, controllerResponse.getStatusCode().value());
+        assertEquals(arg0, controllerResponse.getBody());
     }
+
+
 }

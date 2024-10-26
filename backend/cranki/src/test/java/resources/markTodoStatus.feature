@@ -11,7 +11,7 @@ Feature: Mark todo
       | ECSE428 hw    | IN_PROGRESS |
     When I mark "Buy groceries" as DONE
     Then the status of "Buy groceries" should be "DONE"
-    And the tatus of "ECSE428 hw" should be "IN_PROGRESS"
+    And the status of "ECSE428 hw" should be "IN_PROGRESS"
 
   Scenario: Mark multiple todos as DONE (Alternate Flow)
     Given I have the following todos in my todo list:
@@ -53,7 +53,7 @@ Feature: Mark todo
       | Buy groceries | DONE        |
       | ECSE428 hw    | IN_PROGRESS |
     When I mark "Buy groceries" as DONE
-    Then the status of "Buy grocieres" should remain "DONE"
+    Then the status of "Buy groceries" should remain "DONE"
     And the status of "ECSE428 hw" should be "IN_PROGRESS"
     And I should see an error message "Task is already marked as DONE"
 
@@ -67,7 +67,7 @@ Feature: Mark todo
     And the status of "Buy groceries" should be "DONE"
     And I should see an error message "Task is already marked as IN_PROGRESS"
 
-  Scenario: Attempt to mark a todo as DONE that does not exist
+  Scenario: Attempt to mark a todo as done that does not exist
     Given I have the following todos in my todo list:
       | Todo Name     | Status      |
       | Buy groceries | DONE        |
