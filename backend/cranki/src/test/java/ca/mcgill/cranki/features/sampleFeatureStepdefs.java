@@ -2,6 +2,8 @@ package ca.mcgill.cranki.features;
 
 import ca.mcgill.cranki.controller.TodoListController;
 import ca.mcgill.cranki.dto.AddTodoListDto;
+import ca.mcgill.cranki.model.TodoItem;
+import ca.mcgill.cranki.repository.TodoItemRepository;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -12,6 +14,8 @@ public class sampleFeatureStepdefs extends CucumberSpringConfiguration {
   @Autowired
   private TodoListController controller;
 
+
+
   @Given("no todos have been created")
   public void noTodosHaveBeenCreated() {
   }
@@ -20,6 +24,7 @@ public class sampleFeatureStepdefs extends CucumberSpringConfiguration {
   @When("requesting the creation of todo list with the following name {string}")
   public void requestingTheCreationOfTodoListWithTheFollowingNameName(String name) {
     controller.addTodoList(new AddTodoListDto(name));
+
 
   }
 

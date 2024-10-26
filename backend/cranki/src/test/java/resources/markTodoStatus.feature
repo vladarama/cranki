@@ -4,73 +4,73 @@ Feature: Mark todo
   I would like to mark a todo in a todo list
   So that I am aware of the status of my tasks
 
-  Scenario: Mark a todo as done (Normal Flow)
+  Scenario: Mark a todo as DONE (Normal Flow)
     Given I have the following todos in my todo list:
       | Todo Name     | Status      |
-      | Buy groceries | in progress |
-      | ECSE428 hw    | in progress |
-    When I mark "Buy groceries" as done
-    Then the status of "Buy groceries" should be "done"
-    And the tatus of "ECSE428 hw" should be "in progress"
+      | Buy groceries | IN_PROGRESS |
+      | ECSE428 hw    | IN_PROGRESS |
+    When I mark "Buy groceries" as DONE
+    Then the status of "Buy groceries" should be "DONE"
+    And the tatus of "ECSE428 hw" should be "IN_PROGRESS"
 
-  Scenario: Mark multiple todos as done (Alternate Flow)
+  Scenario: Mark multiple todos as DONE (Alternate Flow)
     Given I have the following todos in my todo list:
       | Todo Name       | Status      |
-      | Buy groceries   | in progress |
-      | ECSE428 hw      | in progress |
-      | Check MyCourses | in progress |
-    When I mark "Buy groceries" as done
-    And I mark "ECSE428 hw" as done
-    Then the status of "Buy groceries" should be "done"
-    And the status of "ECSE428 hw" should be "done"
-    And the status of "Check MyCourses" should be "in progress"
+      | Buy groceries   | IN_PROGRESS |
+      | ECSE428 hw      | IN_PROGRESS |
+      | Check MyCourses | IN_PROGRESS |
+    When I mark "Buy groceries" as DONE
+    And I mark "ECSE428 hw" as DONE
+    Then the status of "Buy groceries" should be "DONE"
+    And the status of "ECSE428 hw" should be "DONE"
+    And the status of "Check MyCourses" should be "IN_PROGRESS"
 
-  Scenario: Mark a todo as in progress (Alternate Flow)
+  Scenario: Mark a todo as IN_PROGRESS (Alternate Flow)
     Given I have the following todos in my todo list:
       | Todo Name     | Status      |
-      | Buy groceries | done        |
-      | ECSE428 hw    | done        |
-    When I mark "Buy groceries" as in progress
-    Then the status of "Buy groceries" should be "in progress"
-    And the status of "ECSE428 hw" should be "done"
+      | Buy groceries | DONE        |
+      | ECSE428 hw    | DONE        |
+    When I mark "Buy groceries" as IN_PROGRESS
+    Then the status of "Buy groceries" should be "IN_PROGRESS"
+    And the status of "ECSE428 hw" should be "DONE"
 
-  Scenario: Mark multiple todos as in progress (Alternate Flow)
+  Scenario: Mark multiple todos as IN_PROGRESS (Alternate Flow)
     Given I have the following todos in my todo list:
       | Todo Name       | Status      |
-      | Buy groceries   | done        |
-      | ECSE428 hw      | done        |
-      | Check MyCourses | done        |
-    When I mark "Buy groceries" as in progress
-    And I mark "ECSE428 hw" as in progress
-    Then the status of "Buy groceries" should be "in progress"
-    And the status of "ECSE428 hw" should be "in progress"
-    And the status of "Check MyCourses" should be "done"
+      | Buy groceries   | DONE        |
+      | ECSE428 hw      | DONE        |
+      | Check MyCourses | DONE        |
+    When I mark "Buy groceries" as IN_PROGRESS
+    And I mark "ECSE428 hw" as IN_PROGRESS
+    Then the status of "Buy groceries" should be "IN_PROGRESS"
+    And the status of "ECSE428 hw" should be "IN_PROGRESS"
+    And the status of "Check MyCourses" should be "DONE"
 
 
-  Scenario: Mark a todo as done that is already marked as done (Error Flow)
+  Scenario: Mark a todo as DONE that is already marked as DONE (Error Flow)
     Given I have the following todos in my todo list:
       | Todo Name     | Status      |
-      | Buy groceries | done        |
-      | ECSE428 hw    | in progress |
-    When I mark "Buy groceries" as done
-    Then the status of "Buy grocieres" should remain "done"
-    And the status of "ECSE428 hw" should be "in progress"
-    And I should see an error message "Task is already marked as done"
+      | Buy groceries | DONE        |
+      | ECSE428 hw    | IN_PROGRESS |
+    When I mark "Buy groceries" as DONE
+    Then the status of "Buy grocieres" should remain "DONE"
+    And the status of "ECSE428 hw" should be "IN_PROGRESS"
+    And I should see an error message "Task is already marked as DONE"
 
-  Scenario: Mark a todo as in progress that is already marked as in progress (Error Flow)
+  Scenario: Mark a todo as IN_PROGRESS that is already marked as IN_PROGRESS (Error Flow)
     Given I have the following todos in my todo list:
       | Todo Name     | Status      |
-      | Buy groceries | done        |
-      | ECSE428 hw    | in progress |
-    When I mark "ECSE428 hw" as in progress
-    Then the status of "ECSE428 hw" should remain "in progress"
-    And the status of "Buy groceries" should be "done"
-    And I should see an error message "Task is already marked as in progress"
+      | Buy groceries | DONE        |
+      | ECSE428 hw    | IN_PROGRESS |
+    When I mark "ECSE428 hw" as IN_PROGRESS
+    Then the status of "ECSE428 hw" should remain "IN_PROGRESS"
+    And the status of "Buy groceries" should be "DONE"
+    And I should see an error message "Task is already marked as IN_PROGRESS"
 
-  Scenario: Attempt to mark a todo as done that does not exist
+  Scenario: Attempt to mark a todo as DONE that does not exist
     Given I have the following todos in my todo list:
       | Todo Name     | Status      |
-      | Buy groceries | done        |
-      | ECSE428 hw    | in progress |
-    When I mark "Go to class" as done
+      | Buy groceries | DONE        |
+      | ECSE428 hw    | IN_PROGRESS |
+    When I mark "Go to class" as DONE
     Then I should see an error message "Task not found"

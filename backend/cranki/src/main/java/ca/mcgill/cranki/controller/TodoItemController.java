@@ -10,17 +10,21 @@ import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping(path = "/todoitem")
 public class TodoItemController {
     @Autowired
     private TodoItemRepository todoItemRepository;
 
-    @PutMapping()
-    public ResponseEntity updateTodoStatus(@RequestBody TodoItemDto todoItemDto){
-        var item = todoItemRepository.findById(todoItemDto.getId()).get();
-        item.setStatus(TodoItem.TodoStatus.valueOf(todoItemDto.getStatus().name()));
+    @PutMapping( value = { "/todoItem/updateStatus" })
+    public ResponseEntity<TodoItemDto> updateTodoStatus(
+            @RequestParam(name = "id") int id,
+            @RequestParam(name = "status") String status
+    ){
+        var item = todoItemRepository.findById(id).get();
+        System.out.println("IN IN IN1: " + item.getStatus() + item.getName());
+        item.setStatus(TodoItem.TodoStatus.valueOf(status));
         todoItemRepository.save(item);
-        return new ResponseEntity(HttpStatus.OK);
+        System.out.println("IN IN IN2: " + todoItemRepository.findById(id).get().getStatus());
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 
