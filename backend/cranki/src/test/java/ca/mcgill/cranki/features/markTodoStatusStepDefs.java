@@ -1,7 +1,6 @@
 package ca.mcgill.cranki.features;
 
 import ca.mcgill.cranki.controller.TodoItemController;
-import ca.mcgill.cranki.dto.TodoItemDto;
 import ca.mcgill.cranki.model.TodoItem;
 import ca.mcgill.cranki.repository.TodoItemRepository;
 import io.cucumber.datatable.DataTable;
@@ -11,10 +10,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.Map;

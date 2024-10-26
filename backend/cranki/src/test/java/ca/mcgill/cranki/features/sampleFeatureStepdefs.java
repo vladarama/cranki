@@ -2,8 +2,6 @@ package ca.mcgill.cranki.features;
 
 import ca.mcgill.cranki.controller.TodoListController;
 import ca.mcgill.cranki.dto.AddTodoListDto;
-import ca.mcgill.cranki.model.TodoItem;
-import ca.mcgill.cranki.repository.TodoItemRepository;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
