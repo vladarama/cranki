@@ -40,4 +40,22 @@ public class TodoItemController {
         return new ResponseEntity<>(todoItemDto, HttpStatus.OK);
     }
 
+    @PutMapping( value = { "/todoItem/updateName", "todoItem/updateName/" })
+    public ResponseEntity<String> editTodoName(
+            @RequestParam(name = "id") int id,
+            @RequestParam(name = "name") String name) {
+        if (name.trim().isEmpty()) {
+            return new ResponseEntity<>("Name cannot be empty", HttpStatus.BAD_REQUEST);
+        }
+
+        var item_option = todoItemRepository.findById(id);
+        if (item_option.isEmpty()) {
+            return new ResponseEntity<>("Todo is not found", HttpStatus.NOT_FOUND);
+        }
+        var item = item_option.get();
+        item.setName(name.trim());
+        todoItemRepository.save(item);
+
+        return ResponseEntity.ok("Todo item name updated successfully");
+    }
 }
