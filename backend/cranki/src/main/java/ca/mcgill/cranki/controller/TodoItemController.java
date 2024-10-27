@@ -57,7 +57,7 @@ public class TodoItemController {
         }
         item.setStatus(TodoItem.TodoStatus.valueOf(status));
         todoItemRepository.save(item);
-        return new ResponseEntity<>("", HttpStatus.OK);
+        return new ResponseEntity<>("Task status updated to " + status, HttpStatus.OK);
     }
 
     @GetMapping(value = {"/todoItem/{id}", "/todoItem/{id}/"})
