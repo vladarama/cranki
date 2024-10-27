@@ -4,65 +4,75 @@ import jakarta.persistence.*;
 
 @Entity
 public class TodoItem {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
-  private String name;
-  private TodoStatus status;
-  private String description;
+    private String name;
+    private TodoStatus status;
+    private String description;
 
-  @ManyToOne
-  @JoinColumn(name = "todo_list_id")
-  private TodoList todoList;
+    @ManyToOne
+    @JoinColumn(name = "todo_list_id")
+    private TodoList todoList;
 
+    public TodoItem() {
 
-  public enum TodoStatus {
-    NOT_DONE,
-    IN_PROGRESS,
-    DONE,
-  }
+    }
 
-  public TodoStatus getStatus() {
-    return status;
-  }
+    public TodoItem(String name, String description, TodoStatus status, TodoList todoList) {
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.todoList = todoList;
+    }
 
-  public void setStatus(TodoStatus status) {
-    this.status = status;
-  }
+    public enum TodoStatus {
+        NOT_DONE,
+        IN_PROGRESS,
+        DONE,
+    }
 
-  public int getId() {
-    return id;
-  }
+    public TodoStatus getStatus() {
+        return status;
+    }
 
-  public String getName() {
-    return name;
-  }
+    public void setStatus(TodoStatus status) {
+        this.status = status;
+    }
 
+    public int getId() {
+        return id;
+    }
 
-  public String getDescription() {
-    return description;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
+    public String getName() {
+        return name;
+    }
 
 
-  public void setDescription(String description) {
-    this.description = description;
-  }
+    public String getDescription() {
+        return description;
+    }
 
-  public TodoList getTodoList() {
-    return todoList;
-  }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-  public void setTodoList(TodoList todoList) {
-    this.todoList = todoList;
-  }
+    public void setId(int id) {
+        this.id = id;
+    }
+
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public TodoList getTodoList() {
+        return todoList;
+    }
+
+    public void setTodoList(TodoList todoList) {
+        this.todoList = todoList;
+    }
 
 }
