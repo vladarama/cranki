@@ -1,10 +1,11 @@
 // TodoItem.tsx
 import React from "react";
+import {TableRow, TableCell } from "./ui/table";
 
 interface TodoItemProps {
   id: number;
   name: string;
-  status: "TODO" | "DONE" | "IN_PROGRESS";
+  status: "NOT_DONE" | "DONE" | "IN_PROGRESS";
   isEditing: boolean;
   editedName: string;
   onNameChange: (newName: string) => void;
@@ -85,3 +86,4 @@ const TodoItem: React.FC<TodoItemProps> = ({
 };
 
 export default TodoItem;
+export type {TodoItemProps};

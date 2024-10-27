@@ -7,18 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from "./components/ui/table";
-import TodoItem from "./components/TodoItem";
+import TodoItem, {TodoItemProps} from "./components/TodoItem";
 
-// Define the shape of a single todo item
-interface TodoItem {
-  id: number;
-  name: string;
-  status: "TODO" | "DONE" | "IN_PROGRESS";
-}
 
 function App() {
   // State for multiple todo items
-  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [todos, setTodos] = useState<TodoItemProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null); // Track which item is being edited
@@ -31,7 +25,7 @@ function App() {
         // Replace with your endpoint that fetches all todo items
         const response = await fetch("http://localhost:3306/todoItems");
         if (!response.ok) throw new Error("Failed to fetch todos");
-        const data: TodoItem[] = await response.json();
+        const data: TodoItemProps[] = await response.json();
         setTodos(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch todos");
@@ -93,11 +87,11 @@ function App() {
     if (!todo) return;
 
     const newStatus =
-      todo.status === "TODO"
+      todo.status === "NOT_DONE"
         ? "IN_PROGRESS"
         : todo.status === "IN_PROGRESS"
         ? "DONE"
-        : "TODO";
+        : "NOT_DONE";
 
     try {
       const response = await fetch(
