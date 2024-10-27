@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -174,7 +175,6 @@ function App() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 
