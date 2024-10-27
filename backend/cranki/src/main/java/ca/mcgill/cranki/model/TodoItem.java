@@ -9,12 +9,27 @@ public class TodoItem {
   private int id;
 
   private String name;
-  private boolean isComplete;
+  private TodoStatus status;
   private String description;
 
   @ManyToOne
   @JoinColumn(name = "todo_list_id")
   private TodoList todoList;
+
+
+  public enum TodoStatus {
+    NOT_DONE,
+    IN_PROGRESS,
+    DONE,
+  }
+
+  public TodoStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(TodoStatus status) {
+    this.status = status;
+  }
 
   public int getId() {
     return id;
@@ -24,9 +39,6 @@ public class TodoItem {
     return name;
   }
 
-  public boolean isComplete() {
-    return isComplete;
-  }
 
   public String getDescription() {
     return description;
@@ -40,9 +52,6 @@ public class TodoItem {
     this.id = id;
   }
 
-  public void setComplete(boolean complete) {
-    isComplete = complete;
-  }
 
   public void setDescription(String description) {
     this.description = description;
