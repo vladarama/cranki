@@ -58,4 +58,14 @@ public class TodoItemController {
 
         return ResponseEntity.ok("Todo item name updated successfully");
     }
+
+    @DeleteMapping(value = {"/todoItem/{id}", "/todoItem/{id}/"})
+    public ResponseEntity<String> deleteTodoItem(@PathVariable(name = "id") int id) {
+        var item = todoItemRepository.findById(id);
+        if (item.isEmpty()) {
+            return new ResponseEntity<>("Todo is not found", HttpStatus.NOT_FOUND);
+        }
+        todoItemRepository.deleteById(id);
+        return new ResponseEntity<>("Todo item deleted successfully", HttpStatus.OK);
+    }
 }

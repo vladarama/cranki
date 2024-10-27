@@ -78,6 +78,25 @@ function App() {
     }
   };
 
+  // Handle delete todo item
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/todoItem/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      // Clear todo state after deletion
+      setTodo(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete todo");
+    }
+  };
+
   // Loading, error, and empty states for single todo
   if (isLoading)
     return (
@@ -166,6 +185,14 @@ function App() {
                       className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                     >
                       Toggle Status
+                    </button>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <button
+                      onClick={() => handleDelete(todo.id)}
+                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                    >
+                      Delete
                     </button>
                   </TableCell>
                 </TableRow>
