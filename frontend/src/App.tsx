@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "./components/ui/table";
-import TodoItem, {TodoItemProps} from "./components/TodoItem";
+import {TodoItemProps} from "./components/TodoItem";
 
 
 function App() {
