@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -67,5 +69,14 @@ public class TodoItemController {
         }
         todoItemRepository.deleteById(id);
         return new ResponseEntity<>("Todo item deleted successfully", HttpStatus.OK);
+    }
+
+    @GetMapping("/todoItems")
+    public ResponseEntity<List<TodoItemDto>> getAllTodoItems() {
+        List<TodoItem> items = (List<TodoItem>) todoItemRepository.findAll();
+        List<TodoItemDto> itemDtos = items.stream()
+            .map(TodoItemDto::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(itemDtos);
     }
 }
