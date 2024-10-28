@@ -1,9 +1,11 @@
 package ca.mcgill.cranki.features;
 
 import ca.mcgill.cranki.controller.TodoItemController;
+import ca.mcgill.cranki.dto.TodoItemDto;
 import ca.mcgill.cranki.model.TodoItem;
+import ca.mcgill.cranki.model.TodoList;
 import ca.mcgill.cranki.repository.TodoItemRepository;
-import io.cucumber.datatable.DataTable;
+import ca.mcgill.cranki.repository.TodoListRepository;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -11,8 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -21,6 +22,9 @@ public class createTodoItemStepDefs {
 
     @Autowired
     private TodoItemRepository todoItemRepository;
+
+    @Autowired
+    private TodoListRepository todoListRepository;
 
     @Autowired
     private TodoItemController todoItemController;
@@ -41,28 +45,32 @@ public class createTodoItemStepDefs {
         TodoItem existingItem = new TodoItem();
         existingItem.setId(id);
         existingItem.setName(name);
-        existingItem.setStatus(TodoItem.TodoStatus.INCOMPLETE);
+        existingItem.setStatus(TodoItem.TodoStatus.NOT_DONE);
         todoItemRepository.save(existingItem);
     }
 
-    @When("requesting the creation of todo {int} with name {string}")
-    public void requestingTheCreationOfTodoWithIdAndName(Integer id, String name) {
-        TodoItem newItem = new TodoItem();
-        newItem.setId(id);
+    @When("requesting the creation of todo with name {string} and description {string} to the todo list {string}")
+    public void requestingTheCreationOfTodoWithNameAndDescription(String name, String description, String todoListName) {
+        TodoItemDto newItem = new TodoItemDto();
         newItem.setName(name);
-        newItem.setStatus(TodoItem.TodoStatus.INCOMPLETE);
+        newItem.setDescription(description);
+        TodoList todoList = new TodoList(todoListName, new ArrayList<>());
+
+        todoListRepository.save(todoList);
         try {
-            controllerResponse = todoItemController.createTodoItem(newItem);
+            controllerResponse = todoItemController.createTodoItem(newItem, todoListName);
         } catch (Exception e) {
             controllerResponse = ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @Then("the todo {int} with name {string} and state Incomplete exists")
-    public void theTodoWithIdAndNameAndStateIncompleteExists(Integer id, String name) {
-        TodoItem item = todoItemRepository.findById(id).orElse(null);
+    @Then("the todo with name {string} and description {string} exist with status {string} in the todo list {string}.")
+    public void theTodoWithNameAndDescriptionAndStateNotDoneExists(String name, String description, String status, String todoListName) {
+        TodoItem item = todoItemRepository.getByName(name);
         assertEquals(name, item.getName());
-        assertEquals(TodoItem.TodoStatus.INCOMPLETE, item.getStatus()); //incomplete not a field
+        assertEquals(description, item.getDescription());
+        assertEquals(TodoItem.TodoStatus.valueOf(status), item.getStatus());
+        assertEquals(todoListName, item.getTodoList().getName());
     }
 
     @Then("the following error message is returned: {string}")
