@@ -39,44 +39,39 @@ public class createTodoItemStepDefs {
         todoListRepository.deleteAll();
     }
 
-    @Given("no todos have been created")
-    public void noTodosHaveBeenCreated() {
+    @Given("the following todo lists exist")
+    public void theFollowingTodoListsExist(DataTable dataTable) {
         clearDatabase();
+        var rows = dataTable.asMaps();
+        for (var row : rows) {
+            TodoList todoList = new TodoList();
+            todoList.setName(row.get("name"));
+            todoListRepository.save(todoList);
+        }
     }
 
-    @Given("there exists the following todos in the todo list named {string}")
-    public void thereExistsTheFollowingTodos(DataTable existingItems, String todoListName) {
-        clearDatabase();
+    @Given("no todos have been created")
+    public void noTodosHaveBeenCreated() {
+        todoItemRepository.deleteAll();
+    }
 
+    @Given("there exists the following todos")
+    public void thereExistsTheFollowingTodos(DataTable existingItems) {
         List<Map<String, String>> rows = existingItems.asMaps();
         for (var row: rows) {
-            String id = row.get("id");
             String name = row.get("name");
             String description = row.get("description");
             String status = row.get("status");
+            String todoListName = row.get("todo list");
 
             TodoItem newItem = new TodoItem();
-            newItem.setId(Integer.parseInt(id));
             newItem.setName(name);
             newItem.setDescription(description);
             newItem.setStatus(TodoItem.TodoStatus.valueOf(status));
-
             newItem.setTodoList(todoListRepository.getByName(todoListName));
 
             todoItemRepository.save(newItem);
         }
-
-        Iterable<TodoItem> todoItemsIterable = todoItemRepository.findAll();
-        List<TodoItem> todoItems = new ArrayList<>();
-        todoItemsIterable.forEach(todoItems::add);
-
-        TodoList todoList = todoListRepository.getByName(todoListName);
-        if (todoList == null) {
-            todoList = new TodoList(todoListName, todoItems);
-        } else {
-            todoList.setItems(todoItems);
-        }
-        todoListRepository.save(todoList);
     }
 
     @When("requesting the creation of todo with name {string} and description {string} to the todo list {string}")
@@ -85,15 +80,10 @@ public class createTodoItemStepDefs {
         newItem.setName(name);
         newItem.setDescription(description);
 
-        if (todoListRepository.getByName(todoListName) == null) {
-            TodoList todoList = new TodoList(todoListName, new ArrayList<>());
-            todoListRepository.save(todoList);
-        }
-
         controllerResponse = todoItemController.createTodoItem(newItem, todoListName);
     }
 
-    @Then("the todo with name {string} and description {string} exist with status {string} in the todo list {string}.")
+    @Then("the todo with name {string} and description {string} exists with status {string} in the todo list {string}.")
     public void theTodoWithNameAndDescriptionAndStateNotDoneExists(String name, String description, String status, String todoListName) {
         TodoItem item = todoItemRepository.getByName(name);
         assertEquals(name, item.getName());
@@ -102,8 +92,8 @@ public class createTodoItemStepDefs {
         assertEquals(todoListName, item.getTodoList().getName());
     }
 
-    @Then("the following todos exist in the todo list named {string}")
-    public void theFollowingTodosExist(DataTable existingItems, String todoListName) {
+    @Then("the following todos exist")
+    public void theFollowingTodosExist(DataTable existingItems) {
         Iterable<TodoItem> todoItems = todoItemRepository.findAll();
         List<TodoItem> actualItems = new ArrayList<>();
         todoItems.forEach(actualItems::add);
@@ -111,17 +101,17 @@ public class createTodoItemStepDefs {
         int row_number = 0;
         List<Map<String, String>> rows = existingItems.asMaps();
         for (var row: rows) {
-            String expectedId = row.get("id");
             String expectedName = row.get("name");
             String expectedDescription = row.get("description");
             String expectedStatus = row.get("status");
+            String todoListName = row.get("todo list");
 
             TodoItem actualItem = actualItems.get(row_number);
 
-            assertEquals(Integer.parseInt(expectedId), actualItem.getId());
             assertEquals(expectedName, actualItem.getName());
             assertEquals(expectedDescription, actualItem.getDescription());
             assertEquals(TodoItem.TodoStatus.valueOf(expectedStatus), actualItem.getStatus());
+            assertEquals(todoListName, actualItem.getTodoList().getName());
 
             row_number++;
         }
