@@ -3,6 +3,9 @@ package ca.mcgill.cranki.controller;
 import ca.mcgill.cranki.dto.AddTodoListDto;
 import ca.mcgill.cranki.model.TodoList;
 import ca.mcgill.cranki.repository.TodoListRepository;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,5 +28,11 @@ public class TodoListController {
   public ResponseEntity<String> getTodoList(@PathVariable String name) {
     var res = todoListRepository.getByName(name);
     return new ResponseEntity<String>(res.getName(), HttpStatus.OK);
+  }
+
+  @GetMapping()
+  public ResponseEntity<List<TodoList>> getTodoLists() {
+    List<TodoList> todoLists = (List<TodoList>) todoListRepository.findAll();
+    return ResponseEntity.ok(todoLists);
   }
 }
