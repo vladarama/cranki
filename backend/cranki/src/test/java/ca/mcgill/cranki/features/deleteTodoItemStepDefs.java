@@ -62,8 +62,8 @@ public class deleteTodoItemStepDefs {
         controllerResponse = todoItemController.deleteTodoItem(Integer.parseInt(id));
     }
 
-    @Then("I should receive a not found error")
-    public void iShouldReceiveANotFoundError() {
+    @Then("I should receive a todo not found error")
+    public void iShouldReceiveATodoNotFoundError() {
         assertEquals(404, controllerResponse.getStatusCode().value());
         assertEquals("Todo is not found", controllerResponse.getBody());
     }
