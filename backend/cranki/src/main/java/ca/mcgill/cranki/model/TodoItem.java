@@ -16,13 +16,25 @@ public class TodoItem {
   @JoinColumn(name = "todo_list_id")
   private TodoList todoList;
 
-
   public enum TodoStatus {
     NOT_DONE,
     IN_PROGRESS,
     DONE,
   }
 
+  // Default no-argument constructor for JPA
+  public TodoItem() {
+  }
+
+  // Custom constructor with description (if needed), including id
+  public TodoItem(int id, String name, TodoStatus status, String description) {
+    this.id = id;
+    this.name = name;
+    this.status = status;
+    this.description = description;
+  }
+
+  // Getters and setters
   public TodoStatus getStatus() {
     return status;
   }
@@ -39,7 +51,6 @@ public class TodoItem {
     return name;
   }
 
-
   public String getDescription() {
     return description;
   }
@@ -52,7 +63,6 @@ public class TodoItem {
     this.id = id;
   }
 
-
   public void setDescription(String description) {
     this.description = description;
   }
@@ -64,5 +74,5 @@ public class TodoItem {
   public void setTodoList(TodoList todoList) {
     this.todoList = todoList;
   }
-
 }
+
