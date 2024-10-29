@@ -7,34 +7,32 @@ import {
   TableHeader,
   TableRow,
 } from "./components/ui/table";
- import TodoItem from "./components/TodoItem";
 
-// Define the shape of a single todo item (renamed to avoid conflicts)
-interface Todo {
+// Define the shape of a single todo item
+interface TodoItem {
   id: number;
   name: string;
   status: "NOT_DONE" | "DONE" | "IN_PROGRESS";
-  description: string;
 }
 
 function App() {
   // State for multiple todo items
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [newTodo, setNewTodo] = useState({ name: "", status: "NOT_DONE", description: "" });
+  const [isEditing, setIsEditing] = useState<number | null>(null);
+  const [editedName, setEditedName] = useState("");
 
   useEffect(() => {
-    // Fetch all todo items from the server
+    // Fetch multiple todo items
     const fetchTodos = async () => {
       try {
         const response = await fetch("http://localhost:8080/todoItems");
         if (!response.ok) throw new Error("Failed to fetch todos");
-        const data: Todo[] = await response.json();
+        const data: TodoItem[] = await response.json();
         setTodos(data);
       } catch (err) {
-        setError("Failed to fetch todos.");
-        console.error(err);
+        setError(err instanceof Error ? err.message : "Failed to fetch todos");
       } finally {
         setIsLoading(false);
       }
@@ -43,42 +41,99 @@ function App() {
     fetchTodos();
   }, []);
 
+  // Handle name edit submission
+  const handleNameSubmit = async (id: number) => {
+    if (!todos) return;
 
-// Toggle the status of a todo item
-const toggleStatus = async (id: number) => {
-  const todo = todos.find((item) => item.id === id);
-  if (!todo) return;
+    try {
+      const response = await fetch(
+        `http://localhost:8080/todoItem/updateName?id=${id}&name=${editedName}`,
+        {
+          method: "PUT",
+        }
+      );
 
-  const newStatus =
-    todo.status === "NOT_DONE"
-      ? "IN_PROGRESS"
-      : todo.status === "IN_PROGRESS"
-      ? "DONE"
-      : "NOT_DONE";
-
-  try {
-    const response = await fetch(
-      `http://localhost:8080/todoItem/updateStatus?id=${id}&status=${newStatus}`,
-      {
-        method: "PUT",
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
-    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText);
+      // Update local state with new name
+      setTodos((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, name: editedName } : item
+        )
+      );
+      setIsEditing(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update name");
     }
+  };
 
-    // Update local state with new status
-    setTodos((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: newStatus } : item
-      )
-    );
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Failed to update status");
-  }
-};
+  // Toggle the status of a todo item
+  const toggleStatus = async (id: number) => {
+    const todo = todos.find((item) => item.id === id);
+    if (!todo) return;
+
+    const newStatus =
+      todo.status === "NOT_DONE"
+        ? "IN_PROGRESS"
+        : todo.status === "IN_PROGRESS"
+        ? "DONE"
+        : "NOT_DONE";
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/todoItem/updateStatus?id=${id}&status=${newStatus}`,
+        {
+          method: "PUT",
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      // Update local state with new status
+      setTodos((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, status: newStatus } : item
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update status");
+    }
+  };
+
+  // Handle delete todo item
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/todoItem/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      // Clear todo state after deletion
+      setTodos((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete todo");
+    }
+  };
+
+  // Handle key press events for the edit input
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
+    if (e.key === "Enter") {
+      handleNameSubmit(id);
+    } else if (e.key === "Escape") {
+      setIsEditing(null);
+      setEditedName("");
+    }
+  };
 
   // Loading, error, and empty states for multiple todos
   if (isLoading)
@@ -95,6 +150,14 @@ const toggleStatus = async (id: number) => {
       </div>
     );
 
+  if (todos.length === 0)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-500">No todos found</div>
+      </div>
+    );
+
+  // Render multiple todo items in a table format
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="container mx-auto py-10 px-4 max-w-4xl">
@@ -113,24 +176,61 @@ const toggleStatus = async (id: number) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-              {todos.length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={4} className="text-center text-gray-500 py-4">
-        No todos found.
-      </TableCell>
-    </TableRow>
-  ) : (
-    todos.map((todo) => (
-      <TodoItem
-        key={todo.id}
-        id={todo.id}
-        name={todo.name}
-        status={todo.status}
-        description={todo.description}
-        onStatusToggle={() => toggleStatus(todo.id)} // Pass the toggleStatus function with the todo.id
-      />
-    ))
-  )}
+                {todos.map((todo) => (
+                  <TableRow key={todo.id}>
+                    <TableCell className="text-center">{todo.id}</TableCell>
+                    <TableCell
+                      className="text-center cursor-pointer hover:bg-gray-50"
+                      onClick={() => {
+                        setIsEditing(todo.id);
+                        setEditedName(todo.name);
+                      }}
+                    >
+                      {isEditing === todo.id ? (
+                        <input
+                          type="text"
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                          onKeyDown={(e) => handleKeyPress(e, todo.id)}
+                          onBlur={() => handleNameSubmit(todo.id)}
+                          className="w-full px-2 py-1 text-center border rounded"
+                          autoFocus
+                        />
+                      ) : (
+                        <span className="hover:text-blue-600">{todo.name}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          todo.status === "DONE"
+                            ? "bg-green-100 text-green-800"
+                            : todo.status === "IN_PROGRESS"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {todo.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <button
+                        onClick={() => toggleStatus(todo.id)}
+                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                      >
+                        Toggle Status
+                      </button>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <button
+                        onClick={() => handleDelete(todo.id)}
+                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>

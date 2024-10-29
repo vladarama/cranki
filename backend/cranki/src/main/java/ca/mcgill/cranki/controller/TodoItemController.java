@@ -71,18 +71,36 @@ public class TodoItemController {
         return ResponseEntity.ok("Todo item name updated successfully");
     }
 
-    @GetMapping(value = { "/todoItems", "/todoItems/" })
-    public ResponseEntity<List<TodoItemDto>> getAllTodoItems() {
-        // Convert the Iterable returned by findAll() into a List
-        List<TodoItem> items = StreamSupport
-                .stream(todoItemRepository.findAll().spliterator(), false)
-                .collect(Collectors.toList());
+    // @GetMapping(value = { "/todoItems", "/todoItems/" })
+    // public ResponseEntity<List<TodoItemDto>> getAllTodoItems() {
+    //     // Convert the Iterable returned by findAll() into a List
+    //     List<TodoItem> items = StreamSupport
+    //             .stream(todoItemRepository.findAll().spliterator(), false)
+    //             .collect(Collectors.toList());
 
-        List<TodoItemDto> itemDtos = items.stream()
-                .map(TodoItemDto::new)
-                .collect(Collectors.toList());
+    //     List<TodoItemDto> itemDtos = items.stream()
+    //             .map(TodoItemDto::new)
+    //             .collect(Collectors.toList());
 
-        return new ResponseEntity<>(itemDtos, HttpStatus.OK);
+    //     return new ResponseEntity<>(itemDtos, HttpStatus.OK);
+    // }
+
+    @DeleteMapping(value = {"/todoItem/{id}", "/todoItem/{id}/"})
+    public ResponseEntity<String> deleteTodoItem(@PathVariable(name = "id") int id) {
+        var item = todoItemRepository.findById(id);
+        if (item.isEmpty()) {
+            return new ResponseEntity<>("Todo is not found", HttpStatus.NOT_FOUND);
+        }
+        todoItemRepository.deleteById(id);
+        return new ResponseEntity<>("Todo item deleted successfully", HttpStatus.OK);
     }
 
+    @GetMapping("/todoItems")
+    public ResponseEntity<List<TodoItemDto>> getAllTodoItems() {
+        List<TodoItem> items = (List<TodoItem>) todoItemRepository.findAll();
+        List<TodoItemDto> itemDtos = items.stream()
+            .map(TodoItemDto::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(itemDtos);
+    }
 }
