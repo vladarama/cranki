@@ -124,7 +124,6 @@ function App() {
       setError(err instanceof Error ? err.message : "Failed to delete todo");
     }
   };
-
   // Handle key press events for the edit input
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
     if (e.key === "Enter") {
@@ -231,7 +230,7 @@ function App() {
                     </TableCell>
                   </TableRow>
                 ))}
-              </TableBody>
+           </TableBody>
             </Table>
           </div>
         </div>

@@ -16,7 +16,6 @@ const Table = React.forwardRef<
 ));
 Table.displayName = "Table";
 
-// Table header section with default center text alignment
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
@@ -29,7 +28,6 @@ const TableHeader = React.forwardRef<
 ));
 TableHeader.displayName = "TableHeader";
 
-// Table body section, ensuring last row has no border
 const TableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
@@ -42,7 +40,6 @@ const TableBody = React.forwardRef<
 ));
 TableBody.displayName = "TableBody";
 
-// Table row, with hover and selected row states
 const TableRow = React.forwardRef<
   HTMLTableRowElement,
   React.HTMLAttributes<HTMLTableRowElement>
@@ -58,7 +55,6 @@ const TableRow = React.forwardRef<
 ));
 TableRow.displayName = "TableRow";
 
-// Table head cell with specific styling and alignment
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
@@ -74,7 +70,6 @@ const TableHead = React.forwardRef<
 ));
 TableHead.displayName = "TableHead";
 
-// Table cell with padding and alignment settings
 const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>

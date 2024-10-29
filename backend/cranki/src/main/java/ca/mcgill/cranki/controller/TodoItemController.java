@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,11 +53,10 @@ public class TodoItemController {
         return new ResponseEntity<>(todoItemDto, HttpStatus.OK);
     }
 
-    @PutMapping(value = { "/todoItem/updateName", "/todoItem/updateName/" })
+    @PutMapping( value = { "/todoItem/updateName", "todoItem/updateName/" })
     public ResponseEntity<String> editTodoName(
             @RequestParam(name = "id") int id,
-            @RequestParam(name = "name") String name
-    ) {
+            @RequestParam(name = "name") String name) {
         if (name.trim().isEmpty()) {
             return new ResponseEntity<>("Name cannot be empty", HttpStatus.BAD_REQUEST);
         }
@@ -70,20 +71,6 @@ public class TodoItemController {
 
         return ResponseEntity.ok("Todo item name updated successfully");
     }
-
-    // @GetMapping(value = { "/todoItems", "/todoItems/" })
-    // public ResponseEntity<List<TodoItemDto>> getAllTodoItems() {
-    //     // Convert the Iterable returned by findAll() into a List
-    //     List<TodoItem> items = StreamSupport
-    //             .stream(todoItemRepository.findAll().spliterator(), false)
-    //             .collect(Collectors.toList());
-
-    //     List<TodoItemDto> itemDtos = items.stream()
-    //             .map(TodoItemDto::new)
-    //             .collect(Collectors.toList());
-
-    //     return new ResponseEntity<>(itemDtos, HttpStatus.OK);
-    // }
 
     @DeleteMapping(value = {"/todoItem/{id}", "/todoItem/{id}/"})
     public ResponseEntity<String> deleteTodoItem(@PathVariable(name = "id") int id) {
