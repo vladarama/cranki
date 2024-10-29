@@ -28,13 +28,9 @@ public class TodoItemController {
         String name = todoItem.getName();
         String description = todoItem.getDescription();
         TodoList todoList = todoListRepository.getByName(todoListName);
-        TodoItem possibleTodoItem = todoItemRepository.getByName(name);
 
         if (name == null || name.trim().isEmpty()) {
             return new ResponseEntity<>("Cannot create todo with empty name", HttpStatus.BAD_REQUEST);
-        }
-        if (possibleTodoItem != null && possibleTodoItem.getStatus() == TodoItem.TodoStatus.NOT_DONE && possibleTodoItem.getTodoList().getName().equals(todoListName)) {
-            return new ResponseEntity<>("New todo with the same name already exists", HttpStatus.BAD_REQUEST);
         }
         if (todoList == null) {
             return new ResponseEntity<>("The todo list does not exist", HttpStatus.BAD_REQUEST);

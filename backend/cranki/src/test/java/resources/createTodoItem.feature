@@ -40,15 +40,6 @@ Scenario: Attempt to Add a Todo with Empty Name (Error Flow)
   Given no todos have been created
   When requesting the creation of todo with name "" and description "Buy cookies" to the todo list "Groceries"
   Then the following error message is returned: "Cannot create todo with empty name"
-
-Scenario: Attempt to Add a Todo with Duplicate Name (Error Flow)
-
-  Given there exists the following todos
-    | name        | description         | status      | todo list |
-    | Buy milk    | Drink milk everyday | NOT_DONE    | Tasks     |
-    | Wash dishes | They're piling up   | DONE        | Tasks     |
-  When requesting the creation of todo with name "Buy milk" and description "Just do it" to the todo list "Tasks"
-  Then the following error message is returned: "New todo with the same name already exists"
   
 Scenario: Attempt to Add a Todo to a non-existing Todo List (Error Flow)
 
