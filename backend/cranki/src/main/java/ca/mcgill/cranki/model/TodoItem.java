@@ -4,75 +4,75 @@ import jakarta.persistence.*;
 
 @Entity
 public class TodoItem {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private int id;
 
-    private String name;
-    private TodoStatus status;
-    private String description;
+  private String name;
+  private TodoStatus status;
+  private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "todo_list_id")
-    private TodoList todoList;
+  @ManyToOne
+  @JoinColumn(name = "todo_list_id")
+  private TodoList todoList;
 
-    public TodoItem() {
+  public enum TodoStatus {
+    NOT_DONE,
+    IN_PROGRESS,
+    DONE,
+  }
 
-    }
+  // Default no-argument constructor for JPA
+  public TodoItem() {
+  }
 
-    public TodoItem(String name, String description, TodoStatus status, TodoList todoList) {
-        this.name = name;
-        this.description = description;
-        this.status = status;
-        this.todoList = todoList;
-    }
+  // Custom constructor with description (if needed), including id
+  public TodoItem(int id, String name, TodoStatus status, String description) {
+    this.id = id;
+    this.name = name;
+    this.status = status;
+    this.description = description;
+  }
 
-    public enum TodoStatus {
-        NOT_DONE,
-        IN_PROGRESS,
-        DONE,
-    }
+  // Getters and setters
+  public TodoStatus getStatus() {
+    return status;
+  }
 
-    public TodoStatus getStatus() {
-        return status;
-    }
+  public void setStatus(TodoStatus status) {
+    this.status = status;
+  }
 
-    public void setStatus(TodoStatus status) {
-        this.status = status;
-    }
+  public int getId() {
+    return id;
+  }
 
-    public int getId() {
-        return id;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getDescription() {
+    return description;
+  }
 
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public String getDescription() {
-        return description;
-    }
+  public void setId(int id) {
+    this.id = id;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+  public TodoList getTodoList() {
+    return todoList;
+  }
 
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public TodoList getTodoList() {
-        return todoList;
-    }
-
-    public void setTodoList(TodoList todoList) {
-        this.todoList = todoList;
-    }
-
+  public void setTodoList(TodoList todoList) {
+    this.todoList = todoList;
+  }
 }
+

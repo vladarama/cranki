@@ -9,12 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
 public class TodoItemController {
+
     @Autowired
     private TodoItemRepository todoItemRepository;
 
@@ -38,12 +40,16 @@ public class TodoItemController {
             return new ResponseEntity<>("The todo list does not exist", HttpStatus.BAD_REQUEST);
         }
 
-        TodoItem newItem = new TodoItem(name, description, TodoItem.TodoStatus.NOT_DONE, todoList);
+        TodoItem newItem = new TodoItem();
+        newItem.setName(name);
+        newItem.setDescription(description);
+        newItem.setStatus(TodoItem.TodoStatus.NOT_DONE);
+        newItem.setTodoList(todoList);
         todoItemRepository.save(newItem);
         return new ResponseEntity<>("Todo item created successfully", HttpStatus.CREATED);
     }
 
-    @PutMapping(value = {"/todoItem/updateStatus", "todoItem/updateStatus/"})
+    @PutMapping(value = { "/todoItem/updateStatus", "/todoItem/updateStatus/" })
     public ResponseEntity<String> updateTodoStatus(
             @RequestParam(name = "id") int id,
             @RequestParam(name = "status") String status
@@ -59,12 +65,16 @@ public class TodoItemController {
         }
         item.setStatus(TodoItem.TodoStatus.valueOf(status));
         todoItemRepository.save(item);
-        return new ResponseEntity<>("Task status updated to " + status, HttpStatus.OK);
+        return new ResponseEntity<>("", HttpStatus.OK);
     }
 
-    @GetMapping(value = {"/todoItem/{id}", "/todoItem/{id}/"})
+    @GetMapping(value = { "/todoItem/{id}", "/todoItem/{id}/" })
     public ResponseEntity<TodoItemDto> getTodoItem(@PathVariable(name = "id") int id) throws Exception {
-        TodoItem item = todoItemRepository.findById(id).get();
+        var item_option = todoItemRepository.findById(id);
+        if (item_option.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        TodoItem item = item_option.get();
         TodoItemDto todoItemDto = new TodoItemDto(item);
         return new ResponseEntity<>(todoItemDto, HttpStatus.OK);
     }
