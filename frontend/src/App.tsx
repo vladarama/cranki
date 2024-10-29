@@ -17,64 +17,60 @@ interface TodoItem {
 
 function App() {
   // State for a single todo item since we're only fetching one todo for now
-  const [todo, setTodo] = useState<TodoItem | null>(null);
+  const [todos, setTodos] = useState<TodoItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     // Fetch a single todo item with ID 1
-    // Note: In the future, this will be expanded to fetch multiple todos
     const fetchTodo = async () => {
       try {
-        // Currently using /todoItem/1 endpoint since the API for multiple todos is not available yet
-        const response = await fetch("http://localhost:8080/todoItem/1");
+        const response = await fetch("http://localhost:8080/todoItems");
+        console.log("what")
         if (!response.ok) throw new Error("Failed to fetch todo");
         const data = await response.json();
-        setTodo(data);
+        setTodos(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch todo");
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchTodo();
   }, []);
 
   // Handle name edit submission
-  const handleNameSubmit = async () => {
-    if (!todo) return;
-
+  const handleNameSubmit = async (id: number, newName: string) => {
     try {
-      const response = await fetch(
-        `http://localhost:8080/todoItem/updateName?id=${todo.id}&name=${editedName}`,
-        {
-          method: "PUT",
-        }
-      );
+      const response = await fetch(`http://localhost:8080/todoItem/updateName?id=${id}&name=${newName}`, {
+        method: 'PUT',
+      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
+      if (response.ok) {
+        setTodos((prevTodos) =>
+          prevTodos?.map((todo) =>
+            todo.id === id ? { ...todo, name: newName } : todo
+          ) || []
+        );
+        setIsEditing(false);
+      } else {
+        console.error('Failed to update the todo item');
       }
-
-      // Update local state with new name
-      setTodo((prev) => (prev ? { ...prev, name: editedName } : null));
-      setIsEditing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update name");
+    } catch (error) {
+      console.error('Error updating the todo item:', error);
     }
   };
 
   // Handle key press events for the edit input
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
     if (e.key === "Enter") {
-      handleNameSubmit();
+      handleNameSubmit(id, editedName);
     } else if (e.key === "Escape") {
       setIsEditing(false);
-      setEditedName(todo?.name || "");
+      setEditedName(todos?.find(todo => todo.id === id)?.name || "");
     }
   };
 
@@ -91,7 +87,7 @@ function App() {
       }
 
       // Clear todo state after deletion
-      setTodo(null);
+      setTodos((prevTodos) => prevTodos?.filter((todo) => todo.id !== id) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete todo");
     }
@@ -112,7 +108,7 @@ function App() {
       </div>
     );
 
-  if (!todo)
+  if (!todos)
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-500">No todo found</div>
@@ -139,63 +135,73 @@ function App() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell className="text-center">{todo.id}</TableCell>
-                  <TableCell
-                    className="text-center cursor-pointer hover:bg-gray-50"
-                    onClick={() => {
-                      if (!isEditing) {
-                        setIsEditing(true);
-                        setEditedName(todo.name);
-                      }
-                    }}
-                  >
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        onBlur={handleNameSubmit}
-                        className="w-full px-2 py-1 text-center border rounded"
-                        autoFocus
-                      />
-                    ) : (
-                      <span className="hover:text-blue-600">{todo.name}</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        todo.status === "DONE"
-                          ? "bg-green-100 text-green-800"
-                          : todo.status === "IN_PROGRESS"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {todo.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <button
-                      onClick={() => {
-                        /* TODO: Implement status update */
-                      }}
-                      className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                    >
-                      Toggle Status
-                    </button>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <button
-                      onClick={() => handleDelete(todo.id)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </TableCell>
-                </TableRow>
+                {todos.length === 0 ? (
+                  // if no todos available, show a message
+                  <TableRow>
+                    <TableCell className="text-center" colSpan={4}>No todo items available.</TableCell>
+                  </TableRow>
+                ) : (
+                  // if there are rodos, render each todo as a row
+                  todos.map((todo) => (
+                    <TableRow key={todo.id}>
+                      <TableCell className="text-center">{todo.id}</TableCell>
+                      <TableCell
+                        className="text-center cursor-pointer hover:bg-gray-50"
+                        onClick={() => {
+                          if (!isEditing) {
+                            setIsEditing(true);
+                            setEditedName(todo.name);
+                            setEditingId(todo.id);
+                          }
+                        }}
+                      >
+                        {isEditing && editingId === todo.id ? (
+                          <input
+                            type="text"
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            onKeyDown={(e) => handleKeyPress(e, todo.id)}
+                            onBlur={() => handleNameSubmit(todo.id, editedName)}
+                            className="w-full px-2 py-1 text-center border rounded"
+                            autoFocus
+                          />
+                        ) : (
+                          <span className="hover:text-blue-600">{todo.name}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm ${todo.status === "DONE"
+                            ? "bg-green-100 text-green-800"
+                            : todo.status === "IN_PROGRESS"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                            }`}
+                        >
+                          {todo.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <button
+                          onClick={() => {
+                            /* TODO: Implement status update */
+                          }}
+                          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                        >
+                          Toggle Status
+                        </button>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <button
+                          onClick={() => handleDelete(todo.id)}
+                          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
