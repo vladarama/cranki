@@ -12,7 +12,7 @@ import {
 interface TodoItem {
   id: number;
   name: string;
-  status: "TODO" | "DONE" | "IN_PROGRESS";
+  status: "NOT_DONE" | "IN_PROGRESS" | "DONE";
 }
 
 function App() {
@@ -90,6 +90,30 @@ function App() {
       setTodos((prevTodos) => prevTodos?.filter((todo) => todo.id !== id) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete todo");
+    }
+  };
+
+  // Handle status toggle for a todo
+  const handleStatusToggle = async (id: number, currentStatus: string) => {
+    const statusOrder = ['NOT_DONE', 'IN_PROGRESS', 'DONE'];
+    const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length];
+
+    try {
+      const response = await fetch(`http://localhost:8080/todoItems/?id=${id}&name=${nextStatus}`, {
+        method: 'PUT',
+      });
+
+      if (response.ok) {
+        setTodos((prevTodos) =>
+          prevTodos?.map((todo) =>
+            todo.id === id ? { ...todo, status: nextStatus } : todo
+          ) || []
+        );
+      } else {
+        console.error('Failed to update the todo item status');
+      }
+    } catch (error) {
+      console.error('Error updating the todo item status:', error);
     }
   };
 
@@ -183,9 +207,7 @@ function App() {
                       </TableCell>
                       <TableCell className="text-center">
                         <button
-                          onClick={() => {
-                            /* TODO: Implement status update */
-                          }}
+                          onClick={() => handleStatusToggle(todo.id, todo.status)}
                           className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                         >
                           Toggle Status
