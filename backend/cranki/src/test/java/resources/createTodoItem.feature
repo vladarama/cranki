@@ -45,10 +45,10 @@ Scenario: Attempt to Add a Todo with Duplicate Name (Error Flow)
 
   Given there exists the following todos
     | name        | description         | status      | todo list |
-    | Buy milk    | Drink milk everyday | IN_PROGRESS | Tasks     |
+    | Buy milk    | Drink milk everyday | NOT_DONE    | Tasks     |
     | Wash dishes | They're piling up   | DONE        | Tasks     |
   When requesting the creation of todo with name "Buy milk" and description "Just do it" to the todo list "Tasks"
-  Then the following error message is returned: "Todo with the same name already exists"
+  Then the following error message is returned: "New todo with the same name already exists"
   
 Scenario: Attempt to Add a Todo to a non-existing Todo List (Error Flow)
 

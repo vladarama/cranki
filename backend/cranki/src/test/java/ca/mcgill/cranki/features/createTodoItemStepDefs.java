@@ -32,7 +32,7 @@ public class createTodoItemStepDefs {
     @Autowired
     private TodoItemController todoItemController;
 
-    private ResponseEntity<?> controllerResponse;
+    private ResponseEntity<Object> controllerResponse;
 
     private void clearDatabase() {
         todoItemRepository.deleteAll();

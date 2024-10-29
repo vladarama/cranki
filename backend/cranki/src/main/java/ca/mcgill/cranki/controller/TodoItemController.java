@@ -24,7 +24,7 @@ public class TodoItemController {
     private TodoListRepository todoListRepository;
 
     @PostMapping(value = {"/todoLists/{todoListName}", "/todoLists/{todoListName}/"})
-    public ResponseEntity<?> createTodoItem(@RequestBody TodoItemDto todoItem, @PathVariable(name = "todoListName") String todoListName) {
+    public ResponseEntity<Object> createTodoItem(@RequestBody TodoItemDto todoItem, @PathVariable(name = "todoListName") String todoListName) {
         String name = todoItem.getName();
         String description = todoItem.getDescription();
         TodoList todoList = todoListRepository.getByName(todoListName);
@@ -33,8 +33,8 @@ public class TodoItemController {
         if (name == null || name.trim().isEmpty()) {
             return new ResponseEntity<>("Cannot create todo with empty name", HttpStatus.BAD_REQUEST);
         }
-        if (possibleTodoItem != null && possibleTodoItem.getTodoList().getName().equals(todoListName)) {
-            return new ResponseEntity<>("Todo with the same name already exists", HttpStatus.BAD_REQUEST);
+        if (possibleTodoItem != null && possibleTodoItem.getStatus() == TodoItem.TodoStatus.NOT_DONE && possibleTodoItem.getTodoList().getName().equals(todoListName)) {
+            return new ResponseEntity<>("New todo with the same name already exists", HttpStatus.BAD_REQUEST);
         }
         if (todoList == null) {
             return new ResponseEntity<>("The todo list does not exist", HttpStatus.BAD_REQUEST);
