@@ -1,17 +1,11 @@
-import { useEffect, useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./components/ui/table";
+import {useEffect, useState} from "react";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "./components/ui/table";
 
 // Define the shape of a single todo item
 interface TodoItem {
   id: number;
   name: string;
+  description: string;
   status: "NOT_DONE" | "DONE" | "IN_PROGRESS";
 }
 
@@ -59,7 +53,7 @@ function App() {
         const errorText = await response.text();
         throw new Error(errorText);
       }
-  
+
       const createdTodo: TodoItem = await response.json();
       setTodos((prev) => [...prev, createdTodo]);
       setNewTodo({ name: "", description: "" });

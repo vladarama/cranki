@@ -24,7 +24,7 @@ public class TodoItemController {
     private TodoListRepository todoListRepository;
 
     @PostMapping(value = {"/todoLists/{todoListName}", "/todoLists/{todoListName}/"})
-    public ResponseEntity<String> createTodoItem(@RequestBody TodoItemDto todoItem, @PathVariable(name = "todoListName") String todoListName) {
+    public ResponseEntity<?> createTodoItem(@RequestBody TodoItemDto todoItem, @PathVariable(name = "todoListName") String todoListName) {
         String name = todoItem.getName();
         String description = todoItem.getDescription();
         TodoList todoList = todoListRepository.getByName(todoListName);
@@ -46,7 +46,9 @@ public class TodoItemController {
         newItem.setStatus(TodoItem.TodoStatus.NOT_DONE);
         newItem.setTodoList(todoList);
         todoItemRepository.save(newItem);
-        return new ResponseEntity<>("Todo item created successfully", HttpStatus.CREATED);
+
+        TodoItemDto createdTodoItemDto = new TodoItemDto(newItem);
+        return new ResponseEntity<>(createdTodoItemDto, HttpStatus.CREATED);
     }
 
     @PutMapping(value = { "/todoItem/updateStatus", "/todoItem/updateStatus/" })
