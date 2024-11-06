@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "./components/ui/table";
+import TodoDetailView from "./components/TodoDetailView"; // Import the detail view component
 
 // Define the shape of a single todo item
 interface TodoItem {
@@ -17,6 +18,7 @@ function App() {
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editedName, setEditedName] = useState("");
   const [newTodo, setNewTodo] = useState({ name: "", description: "" });
+  const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null); // New state for selected todo
 
   useEffect(() => {
     // Fetch multiple todo items
@@ -224,11 +226,12 @@ function App() {
               </TableHeader>
               <TableBody>
                 {todos.map((todo) => (
-                  <TableRow key={todo.id}>
-                    <TableCell className="text-center">{todo.id}</TableCell>
+                  <TableRow key={todo.id} className="cursor-pointer" onClick={() => setSelectedTodo(todo)}>
+                  <TableCell className="text-center">{todo.id}</TableCell>
                     <TableCell
                       className="text-center cursor-pointer hover:bg-gray-50"
                       onClick={() => {
+                        e.stopPropagation();
                         setIsEditing(todo.id);
                         setEditedName(todo.name);
                       }}
@@ -262,7 +265,10 @@ function App() {
                     </TableCell>
                     <TableCell className="text-center">
                       <button
-                        onClick={() => toggleStatus(todo.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleStatus(todo.id);
+                        }}
                         className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                       >
                         Toggle Status
@@ -270,7 +276,10 @@ function App() {
                     </TableCell>
                     <TableCell className="text-center">
                       <button
-                        onClick={() => handleDelete(todo.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(todo.id);
+                        }}
                         className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                       >
                         Delete
@@ -283,6 +292,11 @@ function App() {
           </div>
         </div>
       </div>
+      {selectedTodo && (
+        <div className="w-1/3 bg-white shadow-lg p-4 border-l-2">
+          <TodoDetailView todo={selectedTodo} onClose={() => setSelectedTodo(null)} />
+        </div>
+      )}
     </div>
   );
 }
