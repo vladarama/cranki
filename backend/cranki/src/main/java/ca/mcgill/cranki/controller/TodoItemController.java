@@ -1,5 +1,6 @@
 package ca.mcgill.cranki.controller;
 
+import ca.mcgill.cranki.dto.TodoDescriptionDto;
 import ca.mcgill.cranki.dto.PropertyDto;
 import ca.mcgill.cranki.dto.PropertyValueDto;
 import ca.mcgill.cranki.dto.TodoItemDto;
@@ -46,6 +47,9 @@ public class TodoItemController {
         }
         if (todoList == null) {
             return new ResponseEntity<>("The todo list does not exist", HttpStatus.BAD_REQUEST);
+        }
+        if (description != null && description.length() > 2000) {
+            return new ResponseEntity<>("Description exceeds maximum length of 2000 characters", HttpStatus.BAD_REQUEST);
         }
 
         TodoItem newItem = new TodoItem();
@@ -122,6 +126,34 @@ public class TodoItemController {
       itemSpecificProperties.add(specificProperty);
       item.setSpecificProperties(itemSpecificProperties);
       return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping(value = { "/todoItem/{id}/description", "/todoItem/{id}/description/" })
+    public ResponseEntity<String> getTodoItemDescription(@PathVariable(name = "id") int id) {
+        var item_option = todoItemRepository.findById(id);
+        if (item_option.isEmpty()) {
+            return new ResponseEntity<>("Todo is not found", HttpStatus.NOT_FOUND);
+        }
+        var item = item_option.get();
+        return new ResponseEntity<>(item.getDescription(), HttpStatus.OK);
+    }
+
+    @PutMapping(value = { "/todoItem/{id}/updateDescription", "/todoItem/{id}/updateDescription/" })
+    public ResponseEntity<String> editTodoDescription(
+            @PathVariable(name = "id") int id,
+            @RequestBody TodoDescriptionDto descriptionDto) {
+        String description = descriptionDto.getDescription();
+        if (description != null && description.length() > 2000) {
+            return new ResponseEntity<>("Description exceeds maximum length of 2000 characters", HttpStatus.BAD_REQUEST);
+        }
+        var item_option = todoItemRepository.findById(id);
+        if (item_option.isEmpty()) {
+            return new ResponseEntity<>("Todo is not found", HttpStatus.NOT_FOUND);
+        }
+        var item = item_option.get();
+        item.setDescription(description);
+        todoItemRepository.save(item);
+        return new ResponseEntity<>("Todo item description updated successfully", HttpStatus.OK);
     }
 
     @PutMapping( value = { "/todoItem/updateName", "todoItem/updateName/" })
