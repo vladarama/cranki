@@ -21,7 +21,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class createTodoItemStepDefs {
+public class manageTodoItemStepDefs {
 
     @Autowired
     private TodoItemRepository todoItemRepository;
