@@ -15,6 +15,9 @@ public class TodoList {
   @OneToMany(mappedBy = "todoList")
   private List<TodoItem> items;
 
+  @OneToMany()
+  private List<Property> property;
+
   public TodoList(String name) {
     this.name = name;
   }
@@ -50,5 +53,13 @@ public class TodoList {
 
   public void setItems(List<TodoItem> items) {
     this.items = items;
+  }
+
+  public List<Property> getProperty() {
+    return property;
+  }
+
+  public void setProperty(List<Property> property) {
+    this.property = property;
   }
 }
