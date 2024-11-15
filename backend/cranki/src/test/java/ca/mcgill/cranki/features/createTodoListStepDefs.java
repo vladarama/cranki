@@ -61,7 +61,7 @@ public class createTodoListStepDefs {
 
     @Then("the new to-do list {string} is created with the Id {int}")
     public void theNewTodoListIsCreatedWithTheId(String name, int Id) {
-        TodoList item = todoListRepository.findByName(name);
+        TodoList item = todoListRepository.getByName(name);
         assertEquals(name, item.getName());
         assertEquals(Id, item.getId());
     }
@@ -97,11 +97,7 @@ public class createTodoListStepDefs {
 
     @When("the user updates the name of the to-do list with Id {int} to {string}")
     public void theUserUpdatesTheNameOfTheTodoListWithIdTo(int id, String newName) {
-        AddTodoListDto updatedItem = new AddTodoListDto();
-        updatedItem.setId(id);
-        updatedItem.setName(newName);
-
-        todoListController.updateTodoList(id, updatedItem);
+        todoListController.editTodoListName(id, newName);
     }
 
     @Then("the to-do list with Id {int} is updated to {string}")
@@ -117,7 +113,7 @@ public class createTodoListStepDefs {
 
     @Then("the to-do list retains its original name {string}")
     public void theTodoListRetainsItsOriginalName(String originalName) {
-        TodoList list = todoListRepository.findByName(originalName);
+        TodoList list = todoListRepository.getByName(originalName);
         assertEquals(originalName, list.getName());
     }
 
@@ -138,7 +134,12 @@ public class createTodoListStepDefs {
 
     @When("the user attempts to delete a non-existing to-do list with Id {int}")
     public void theUserAttemptsToDeleteANonExistingTodoListWithId(int id) {
-        controllerResponse = todoListController.deleteTodoList(id);
+        ResponseEntity<String> stringResponse = todoListController.deleteTodoList(id);
+    
+        controllerResponse = ResponseEntity
+            .status(stringResponse.getStatusCode())
+            .headers(stringResponse.getHeaders())
+            .body((Object) stringResponse.getBody());
     }
 
     @Then("an error message {string} is displayed")
