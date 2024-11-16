@@ -10,6 +10,7 @@ public class TodoItem {
 
   private String name;
   private TodoStatus status;
+  private TodoPriority priority;
   private String description;
 
   @ManyToOne
@@ -20,6 +21,12 @@ public class TodoItem {
     NOT_DONE,
     IN_PROGRESS,
     DONE,
+  }
+
+  public enum TodoPriority {
+    LOW,
+    MEDIUM,
+    HIGH,
   }
 
   // Default no-argument constructor for JPA
@@ -41,6 +48,14 @@ public class TodoItem {
 
   public void setStatus(TodoStatus status) {
     this.status = status;
+  }
+
+  public TodoPriority getPriority() {
+    return priority;
+  }
+
+  public void setPriority(TodoPriority priority) {
+    this.priority = priority;
   }
 
   public int getId() {
@@ -75,4 +90,3 @@ public class TodoItem {
     this.todoList = todoList;
   }
 }
-

@@ -23,8 +23,9 @@ public class TodoItemController {
     @Autowired
     private TodoListRepository todoListRepository;
 
-    @PostMapping(value = {"/todoLists/{todoListName}", "/todoLists/{todoListName}/"})
-    public ResponseEntity<Object> createTodoItem(@RequestBody TodoItemDto todoItem, @PathVariable(name = "todoListName") String todoListName) {
+    @PostMapping(value = { "/todoLists/{todoListName}", "/todoLists/{todoListName}/" })
+    public ResponseEntity<Object> createTodoItem(@RequestBody TodoItemDto todoItem,
+            @PathVariable(name = "todoListName") String todoListName) {
         String name = todoItem.getName();
         String description = todoItem.getDescription();
         TodoList todoList = todoListRepository.getByName(todoListName);
@@ -50,8 +51,7 @@ public class TodoItemController {
     @PutMapping(value = { "/todoItem/updateStatus", "/todoItem/updateStatus/" })
     public ResponseEntity<String> updateTodoStatus(
             @RequestParam(name = "id") int id,
-            @RequestParam(name = "status") String status
-    ) {
+            @RequestParam(name = "status") String status) {
         var item_option = todoItemRepository.findById(id);
         if (item_option.isEmpty()) {
             return new ResponseEntity<>("Task not found", HttpStatus.BAD_REQUEST);
@@ -66,6 +66,44 @@ public class TodoItemController {
         return new ResponseEntity<>("", HttpStatus.OK);
     }
 
+    @GetMapping(value = { "/todoItem/status/{id}", "/todoItem/status/{id}/" })
+    public ResponseEntity<String> getTodoStatus(@PathVariable(name = "id") int id) {
+        var item_option = todoItemRepository.findById(id);
+        if (item_option.isEmpty()) {
+            return new ResponseEntity<>("Task not found", HttpStatus.BAD_REQUEST);
+        }
+        var item = item_option.get();
+        return new ResponseEntity<>(item.getStatus().toString(), HttpStatus.OK);
+    }
+
+    @PutMapping(value = { "/todoItem/updatePriority", "/todoItem/updatePriority/" })
+    public ResponseEntity<String> updateTodoPriority(
+            @RequestParam(name = "id") int id,
+            @RequestParam(name = "priority") String priority) {
+        var item_option = todoItemRepository.findById(id);
+        if (item_option.isEmpty()) {
+            return new ResponseEntity<>("Task not found", HttpStatus.BAD_REQUEST);
+        }
+        var item = item_option.get();
+
+        if (item.getPriority().equals(TodoItem.TodoPriority.valueOf(priority))) {
+            return new ResponseEntity<>("Task is already marked as " + priority, HttpStatus.BAD_REQUEST);
+        }
+        item.setPriority(TodoItem.TodoPriority.valueOf(priority));
+        todoItemRepository.save(item);
+        return new ResponseEntity<>("", HttpStatus.OK);
+    }
+
+    @GetMapping(value = { "/todoItem/priority/{id}", "/todoItem/priority/{id}/" })
+    public ResponseEntity<String> getTodoPriority(@PathVariable(name = "id") int id) {
+        var item_option = todoItemRepository.findById(id);
+        if (item_option.isEmpty()) {
+            return new ResponseEntity<>("Todo item not found", HttpStatus.NOT_FOUND);
+        }
+        var item = item_option.get();
+        return ResponseEntity.ok(item.getPriority().name());
+    }
+
     @GetMapping(value = { "/todoItem/{id}", "/todoItem/{id}/" })
     public ResponseEntity<TodoItemDto> getTodoItem(@PathVariable(name = "id") int id) throws Exception {
         var item_option = todoItemRepository.findById(id);
@@ -77,7 +115,7 @@ public class TodoItemController {
         return new ResponseEntity<>(todoItemDto, HttpStatus.OK);
     }
 
-    @PutMapping( value = { "/todoItem/updateName", "todoItem/updateName/" })
+    @PutMapping(value = { "/todoItem/updateName", "todoItem/updateName/" })
     public ResponseEntity<String> editTodoName(
             @RequestParam(name = "id") int id,
             @RequestParam(name = "name") String name) {
@@ -96,7 +134,7 @@ public class TodoItemController {
         return ResponseEntity.ok("Todo item name updated successfully");
     }
 
-    @DeleteMapping(value = {"/todoItem/{id}", "/todoItem/{id}/"})
+    @DeleteMapping(value = { "/todoItem/{id}", "/todoItem/{id}/" })
     public ResponseEntity<String> deleteTodoItem(@PathVariable(name = "id") int id) {
         var item = todoItemRepository.findById(id);
         if (item.isEmpty()) {
@@ -110,8 +148,8 @@ public class TodoItemController {
     public ResponseEntity<List<TodoItemDto>> getAllTodoItems() {
         List<TodoItem> items = (List<TodoItem>) todoItemRepository.findAll();
         List<TodoItemDto> itemDtos = items.stream()
-            .map(TodoItemDto::new)
-            .collect(Collectors.toList());
+                .map(TodoItemDto::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(itemDtos);
     }
 }
