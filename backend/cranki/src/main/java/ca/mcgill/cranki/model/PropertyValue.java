@@ -24,6 +24,8 @@ public class PropertyValue {
 
   }
 
+  public int getId() { return id; }
+
   public String getValue() {
     return value;
   }
