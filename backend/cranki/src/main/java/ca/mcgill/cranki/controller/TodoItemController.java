@@ -35,8 +35,9 @@ public class TodoItemController {
   @Autowired
   private SpecificPropertyRepository specificPropertyRepository;
 
-    @PostMapping(value = {"/todoLists/{todoListName}", "/todoLists/{todoListName}/"})
-    public ResponseEntity<Object> createTodoItem(@RequestBody TodoItemDto todoItem, @PathVariable(name = "todoListName") String todoListName) {
+    @PostMapping(value = { "/todoLists/{todoListName}", "/todoLists/{todoListName}/" })
+    public ResponseEntity<Object> createTodoItem(@RequestBody TodoItemDto todoItem,
+            @PathVariable(name = "todoListName") String todoListName) {
         String name = todoItem.getName();
         String description = todoItem.getDescription();
         TodoList todoList = todoListRepository.getByName(todoListName);
@@ -163,7 +164,7 @@ public class TodoItemController {
       return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PutMapping( value = { "/todoItem/updateName", "todoItem/updateName/" })
+    @PutMapping(value = { "/todoItem/updateName", "todoItem/updateName/" })
     public ResponseEntity<String> editTodoName(
             @RequestParam(name = "id") int id,
             @RequestParam(name = "name") String name) {
