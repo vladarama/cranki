@@ -78,7 +78,7 @@ function App() {
   const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8080/todoLists/Personal", {
+      const response = await fetch("http://localhost:8080/todoLists/Tasks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
