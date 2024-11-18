@@ -41,7 +41,11 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editedName, setEditedName] = useState("");
-  const [newTodo, setNewTodo] = useState({ name: "", description: "" });
+  const [newTodo, setNewTodo] = useState({
+    name: "",
+    description: "",
+    priority: "MEDIUM",
+  });
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
@@ -74,12 +78,16 @@ function App() {
   const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8080/todoLists/Tasks", {
+      const response = await fetch("http://localhost:8080/todoLists/Personal", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newTodo),
+        body: JSON.stringify({
+          name: newTodo.name,
+          description: newTodo.description,
+          priority: newTodo.priority,
+        }),
       });
 
       if (!response.ok) {
@@ -89,7 +97,7 @@ function App() {
 
       const createdTodo: TodoItem = await response.json();
       setTodos((prev) => [...prev, createdTodo]);
-      setNewTodo({ name: "", description: "" });
+      setNewTodo({ name: "", description: "", priority: "MEDIUM" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create todo");
     }
@@ -322,6 +330,26 @@ function App() {
                 }
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+            <div className="flex-1">
+              <label
+                htmlFor="priority"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Priority
+              </label>
+              <select
+                id="priority"
+                value={newTodo.priority}
+                onChange={(e) =>
+                  setNewTodo({ ...newTodo, priority: e.target.value })
+                }
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
             </div>
             <button
               type="submit"

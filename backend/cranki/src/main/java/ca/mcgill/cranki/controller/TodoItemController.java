@@ -41,10 +41,12 @@ public class TodoItemController {
         newItem.setName(name);
         newItem.setDescription(description);
         newItem.setStatus(TodoItem.TodoStatus.NOT_DONE);
+        
+        TodoItem.TodoPriority priority = TodoItem.TodoPriority.valueOf(todoItem.getPriority());
+        newItem.setPriority(priority);
         newItem.setTodoList(todoList);
-        todoItemRepository.save(newItem);
-
-        TodoItemDto createdTodoItemDto = new TodoItemDto(newItem);
+        TodoItem savedItem = todoItemRepository.save(newItem);
+        TodoItemDto createdTodoItemDto = new TodoItemDto(savedItem);
         return new ResponseEntity<>(createdTodoItemDto, HttpStatus.CREATED);
     }
 

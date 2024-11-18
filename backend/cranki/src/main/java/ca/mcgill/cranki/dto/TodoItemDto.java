@@ -34,13 +34,15 @@ public class TodoItemDto {
     this.priority = TodoPriority.valueOf(todoItem.getPriority().name());
   }
 
-  public int getId() { return id;}
+  public int getId() { return id; }
 
   public String getName() {
     return name;
   }
 
-  public TodoPriority getPriority() { return priority; }
+  public String getPriority() { 
+    return priority != null ? priority.name() : TodoPriority.MEDIUM.name(); 
+  }
 
   public TodoStatus getStatus() { return status; }
 
@@ -52,5 +54,11 @@ public class TodoItemDto {
     this.name = name;
   }
 
-  public void setPriority(TodoPriority priority) { this.priority = priority; }
+  public void setPriority(String priority) { 
+    try {
+      this.priority = TodoPriority.valueOf(priority);
+    } catch (IllegalArgumentException e) {
+      this.priority = TodoPriority.MEDIUM;
+    }
+  }
 }
