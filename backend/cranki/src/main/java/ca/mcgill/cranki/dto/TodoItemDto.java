@@ -7,11 +7,18 @@ public class TodoItemDto {
   private String name;
   private TodoStatus status;
   private String description;
+  private TodoPriority priority;
 
   public enum TodoStatus {
     NOT_DONE,
     IN_PROGRESS,
     DONE,
+  }
+  
+  public enum TodoPriority {
+    LOW,
+    MEDIUM,
+    HIGH,
   }
 
   public TodoItemDto() {
@@ -24,6 +31,7 @@ public class TodoItemDto {
     this.name = todoItem.getName();
     this.status = TodoStatus.valueOf(todoItem.getStatus().name());
     this.description = todoItem.getDescription();
+    this.priority = TodoPriority.valueOf(todoItem.getPriority().name());
   }
 
   public int getId() { return id;}
@@ -31,6 +39,8 @@ public class TodoItemDto {
   public String getName() {
     return name;
   }
+
+  public TodoPriority getPriority() { return priority; }
 
   public TodoStatus getStatus() { return status; }
 
@@ -41,4 +51,6 @@ public class TodoItemDto {
   public void setName(String name) {
     this.name = name;
   }
+
+  public void setPriority(TodoPriority priority) { this.priority = priority; }
 }
