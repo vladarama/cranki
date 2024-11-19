@@ -40,9 +40,7 @@ public class createTodoItemStepDefs {
 
 
     private void clearDatabase() {
-        propertyRepository.deleteAll();
         todoListRepository.deleteAll();
-        todoItemRepository.deleteAll();
     }
 
     @Given("the following todo lists exist")

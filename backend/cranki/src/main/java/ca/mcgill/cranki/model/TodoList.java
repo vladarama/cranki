@@ -15,7 +15,7 @@ public class TodoList {
   @OneToMany(mappedBy = "todoList", cascade = CascadeType.REMOVE)
   private List<TodoItem> items;
 
-  @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
+  @OneToMany(cascade = CascadeType.REMOVE)
   private List<Property> property;
 
   public TodoList(String name) {
