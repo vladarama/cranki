@@ -12,7 +12,7 @@ public class TodoList {
   @Column(nullable = false)
   private String name;
 
-  @OneToMany(mappedBy = "todoList")
+  @OneToMany(mappedBy = "todoList", cascade = CascadeType.REMOVE)
   private List<TodoItem> items;
 
   @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)

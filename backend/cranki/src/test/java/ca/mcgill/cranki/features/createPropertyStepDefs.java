@@ -17,6 +17,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.aspectj.weaver.ast.Literal;
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -51,9 +52,14 @@ public class createPropertyStepDefs {
 
 
     private void clearDatabase() {
+        propertyRepository.deleteAll();
         todoItemRepository.deleteAll();
         todoListRepository.deleteAll();
-        propertyRepository.deleteAll();
+    }
+
+    @AfterEach
+    public void tearDownCreateProperty() {
+        clearDatabase();
     }
 
     @Given("the following todo lists exist2")
