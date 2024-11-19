@@ -52,5 +52,7 @@ abstract public class PropertyDto {
     this.todoListId = newTodoListId;
   }
 
+  public void setType(PropertyDtoType type) { this.type = type; }
+
   public PropertyDtoType getType() { return this.type; }
 }

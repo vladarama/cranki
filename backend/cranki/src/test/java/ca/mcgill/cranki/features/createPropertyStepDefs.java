@@ -4,9 +4,11 @@ import ca.mcgill.cranki.controller.TodoItemController;
 import ca.mcgill.cranki.controller.properties.PropertyController;
 import ca.mcgill.cranki.dto.LiteralPropertyDto;
 import ca.mcgill.cranki.dto.MultiselectPropertyDto;
+import ca.mcgill.cranki.dto.PropertyDto;
 import ca.mcgill.cranki.dto.TodoItemDto;
 import ca.mcgill.cranki.model.*;
 import ca.mcgill.cranki.repository.PropertyRepository;
+import ca.mcgill.cranki.repository.PropertyValueRepository;
 import ca.mcgill.cranki.repository.TodoItemRepository;
 import ca.mcgill.cranki.repository.TodoListRepository;
 import io.cucumber.datatable.DataTable;
@@ -14,6 +16,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.aspectj.weaver.ast.Literal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -23,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class createPropertyStepDefs {
@@ -43,15 +46,18 @@ public class createPropertyStepDefs {
     private TodoItemController todoItemController;
 
     private ResponseEntity<Object> controllerResponse;
+    @Autowired
+    private PropertyValueRepository propertyValueRepository;
+
 
     private void clearDatabase() {
-        propertyRepository.deleteAll();
         todoItemRepository.deleteAll();
         todoListRepository.deleteAll();
+        propertyRepository.deleteAll();
     }
 
-    @Given("the following todo lists exist")
-    public void theFollowingTodoListsExist(DataTable dataTable) {
+    @Given("the following todo lists exist2")
+    public void theFollowingTodoListsExist2(DataTable dataTable) {
         clearDatabase();
         var rows = dataTable.asMaps();
         for (var row : rows) {
@@ -61,15 +67,16 @@ public class createPropertyStepDefs {
         }
     }
 
-    @And("the following literal properties exist")
+    @And("the following literal properties already exist")
     public void theFollowingLiteralPropertiesExist(DataTable dataTable) {
         var rows = dataTable.asMaps();
         for (var row : rows) {
-            TodoList todoList = todoListRepository.findById(Integer.parseInt(row.get("todoListId"))).get();
+            TodoList todoList = todoListRepository.getByName(row.get("todoListName"));
             List<Property> existingProperties = todoList.getProperty();
 
             LiteralProperty literalProperty = new LiteralProperty();
             literalProperty.setName(row.get("name"));
+            literalProperty.setId(Integer.parseInt(row.get("id")));
             literalProperty.setTodoList(todoList);
             existingProperties.add(literalProperty);
             propertyRepository.save(literalProperty);
@@ -80,19 +87,24 @@ public class createPropertyStepDefs {
 
     }
 
-    @And("the following multiselect properties exist")
+    @And("the following multiselect properties already exist")
     public void theFollowingMultiselectPropertiesExist(DataTable dataTable) {
         var rows = dataTable.asMaps();
         for (var row : rows) {
-            TodoList todoList = todoListRepository.findById(Integer.parseInt(row.get("todoListId"))).get();
+            TodoList todoList = todoListRepository.getByName(row.get("todoListName"));
             List<Property> existingProperties = todoList.getProperty();
 
             MultiSelectProperty multiSelectProperty = new MultiSelectProperty();
             multiSelectProperty.setName(row.get("name"));
+            multiSelectProperty.setId(Integer.parseInt(row.get("id")));
             multiSelectProperty.setTodoList(todoList);
 
-            List<String> valueNames = List.of(row.get("values").split(";"));
             List<PropertyValue> values = new ArrayList<>();
+            String concatValues = row.get("values");
+            if (concatValues == null) {
+               concatValues = "";
+            }
+            List<String> valueNames = List.of(concatValues.split(";"));
             for (String valueName : valueNames) {
                 PropertyValue propertyValue = new PropertyValue(valueName);
                 propertyValue.setProperty(multiSelectProperty);
@@ -108,11 +120,13 @@ public class createPropertyStepDefs {
         }
     }
 
-    @When("the user creates a literal property with name {string} for todoList with id {string}")
-    public void theUserCreatesALiteralPropertyWithNameForTodoListWithId(String name, String todoListId) {
+    @When("the user creates a literal property with name {string} for todo list with name {string}")
+    public void theUserCreatesALiteralPropertyWithNameForTodoListWithName(String name, String todoListName) {
         LiteralPropertyDto newLiteralPropertyDto = new LiteralPropertyDto();
         newLiteralPropertyDto.setName(name);
-        newLiteralPropertyDto.setTodoListId(Integer.parseInt(todoListId));
+        TodoList todoList = todoListRepository.getByName(todoListName);
+        newLiteralPropertyDto.setTodoListId(todoList.getId());
+        newLiteralPropertyDto.setType(PropertyDto.PropertyDtoType.LITERAL);
         controllerResponse = propertyController.createProperty(newLiteralPropertyDto);
     }
 
@@ -121,76 +135,85 @@ public class createPropertyStepDefs {
             assertEquals(HttpStatus.NOT_FOUND, controllerResponse.getStatusCode());
     }
 
-    @When("the user creates a multiselect property with name {string} for todoList with id {string} with values {string}")
+    @When("the user creates a multiselect property with name {string} for todo list with id {string} with values {string}")
     public void theUserCreatesAMultiselectPropertyWithNameForTodoListWithIdWithValues(String name, String todoListId, String valueStrings) {
         MultiselectPropertyDto newMultiselectPropertyDto = new MultiselectPropertyDto();
         newMultiselectPropertyDto.setName(name);
         newMultiselectPropertyDto.setTodoListId(Integer.parseInt(todoListId));
+        newMultiselectPropertyDto.setType(PropertyDto.PropertyDtoType.MULTISELECT);
 
+        List<Integer> propertyValueIds = new ArrayList<Integer>();
         List<String> listOfStrings = List.of(valueStrings.split(";"));
         for (String valueString: listOfStrings) {
             PropertyValue propertyValue = new PropertyValue(valueString);
-            values.add(propertyValue);
+            propertyValueRepository.save(propertyValue);
+            propertyValueIds.add(propertyValue.getId());
+        }
+
+        newMultiselectPropertyDto.setValueIds(propertyValueIds);
+        controllerResponse = propertyController.createProperty(newMultiselectPropertyDto);
+    }
+
+
+    @When("the user creates a multiselect property with name {string} for todo list with name {string}")
+    public void theUserCreatesAMultiselectPropertyWithNameForTodoListWithId(String name, String todoListName) {
+        MultiselectPropertyDto newMultiselectPropertyDto = new MultiselectPropertyDto();
+        newMultiselectPropertyDto.setName(name);
+        TodoList todoList = todoListRepository.getByName(todoListName);
+        Integer todoListId;
+        if (todoList == null) {
+           todoListId = -1;
+        } else {
+            todoListId = todoList.getId();
+        }
+        newMultiselectPropertyDto.setTodoListId(todoListId);
+        List<Integer> propertyValueIds = new ArrayList<Integer>();
+        newMultiselectPropertyDto.setValueIds(propertyValueIds);
+        controllerResponse = propertyController.createProperty(newMultiselectPropertyDto);
+    }
+
+    @Then("the following literal properties shall exist")
+    public void theFollowingLiteralPropertiesShallExist(DataTable dataTable) {
+        var rows = dataTable.asMaps();
+        for (var row : rows) {
+            String id = row.get("id");
+            String name = row.get("name");
+            Integer todoListId = Integer.parseInt(row.get("todoListId"));
+
+            Property testprop = propertyRepository.findById(Integer.parseInt(id)).get();
+            assertInstanceOf(LiteralProperty.class, testprop);
+            LiteralProperty litprop = (LiteralProperty) testprop;
+
+            assertEquals(name, litprop.getName());
+            assertEquals(todoListId, litprop.getTodoList().getId());
         }
     }
 
+    @Then("the following multiselect properties shall exist")
+    public void theFollowingMultiselectPropertiesShallExist(DataTable dataTable) {
+        var rows = dataTable.asMaps();
+        for (var row : rows) {
+            String id = row.get("id");
+            String name = row.get("name");
+            Integer todoListId = Integer.parseInt(row.get("todoListId"));
+
+            Property testprop = propertyRepository.findById(Integer.parseInt(id)).get();
+            assertInstanceOf(MultiSelectProperty.class, testprop);
+            MultiSelectProperty msprop = (MultiSelectProperty) testprop;
+
+            assertEquals(name, msprop.getName());
+            assertEquals(todoListId, msprop.getTodoList().getId());
 
 
-
-    @Then("the todo with name {string} and description {string} exists with status {string} in the todo list {string}.")
-    public void theTodoWithNameAndDescriptionAndStateNotDoneExists(String name, String description, String status, String todoListName) {
-        TodoItem item = todoItemRepository.getByName(name);
-        assertEquals(name, item.getName());
-        assertEquals(description, item.getDescription());
-        assertEquals(TodoItem.TodoStatus.valueOf(status), item.getStatus());
-        assertEquals(todoListName, item.getTodoList().getName());
-    }
-
-    @Then("the following todos exist")
-    public void theFollowingTodosExist(DataTable existingItems) {
-        Iterable<TodoItem> todoItems = todoItemRepository.findAll();
-        List<TodoItem> actualItems = new ArrayList<>();
-        todoItems.forEach(actualItems::add);
-
-        int row_number = 0;
-        List<Map<String, String>> rows = existingItems.asMaps();
-        for (var row: rows) {
-            String expectedName = row.get("name");
-            String expectedDescription = row.get("description");
-            String expectedStatus = row.get("status");
-            String todoListName = row.get("todo list");
-
-            TodoItem actualItem = actualItems.get(row_number);
-
-            assertEquals(expectedName, actualItem.getName());
-            assertEquals(expectedDescription, actualItem.getDescription());
-            assertEquals(TodoItem.TodoStatus.valueOf(expectedStatus), actualItem.getStatus());
-            assertEquals(todoListName, actualItem.getTodoList().getName());
-
-            row_number++;
+            List<String> expectedValueValues = List.of(row.get("values").split(";"));
+            List<String> valueValues = new ArrayList<>();
+            for (var propVal: msprop.getValues()) {
+                valueValues.add(propVal.getValue());
+            }
+            for (String expectedValueValue : expectedValueValues) {
+                assertTrue(valueValues.contains(expectedValueValue));
+            }
         }
     }
 
-    @Then("the following error message is returned: {string}")
-    public void theFollowingErrorMessageIsReturned(String expectedMessage) {
-        assertEquals(400, controllerResponse.getStatusCode().value());
-        assertEquals(expectedMessage, controllerResponse.getBody());
-    }
-
-
-
-
-
-
-
-
-
-
-    @When("the user creates a multiselect property with name {string} for todoList with id {string}")
-    public void theUserCreatesAMultiselectPropertyWithNameForTodoListWithId(String arg0, String arg1) {
-    }
-
-    @When("the user creates a multiselect property with name {string} for todo list with id {string}")
-    public void theUserCreatesAMultiselectPropertyWithNameForTodoListWithId(String arg0, String arg1) {
-    }
 }

@@ -34,6 +34,7 @@ public class createTodoItemStepDefs {
 
     private ResponseEntity<Object> controllerResponse;
 
+
     private void clearDatabase() {
         todoItemRepository.deleteAll();
         todoListRepository.deleteAll();

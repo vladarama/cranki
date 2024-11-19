@@ -49,7 +49,6 @@ public class markTodoStatusStepDefs {
 
             todoItemRepository.save(newItem);
         }
-        System.out.println("SIZE SIZE SIZE: " + todoItemRepository.count());
     }
 
     @When("I mark {string} as DONE")
