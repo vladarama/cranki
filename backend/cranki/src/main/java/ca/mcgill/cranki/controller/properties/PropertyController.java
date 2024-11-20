@@ -92,4 +92,38 @@ public class PropertyController {
         return new ResponseEntity<>(property, HttpStatus.CREATED);
     }
 
+    @PutMapping( value = { "/property/name ", "/property/name/"})
+    public ResponseEntity<String> updateProperty(
+            @RequestParam(name = "id") int id,
+            @RequestParam(name = "name") String name) {
+        if (name.trim().isEmpty()) {
+            return new ResponseEntity<>("Name cannot be empty", HttpStatus.BAD_REQUEST);
+        }
+
+        var property_option = propertyRepository.findById(id);
+        if (property_option.isEmpty()) {
+            return new ResponseEntity<>("Property not found", HttpStatus.NOT_FOUND);
+        }
+        var property = property_option.get();
+
+        TodoList todoList = property.getTodoList();
+        List<Property> existingProperties = todoList.getProperty();
+        existingProperties.add(property);
+        todoList.setProperty(existingProperties);
+
+        property.setName(name);
+        propertyRepository.save(property);
+        todoListRepository.save(todoList);
+
+        return ResponseEntity.ok("Property successfully updated");
+    }
+
+    // todo delete property step def
+    // todo: create propertyvalue step def
+        // (creation attaches to property)
+    // todo delete propertyvalue step def
+    // todo update propertyvalue step def
+        // update attached values (specify new list of ids)
+    // todo create specificproperty step def
+        // create with list of value ids
 }
