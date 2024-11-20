@@ -146,7 +146,6 @@ public class createPropertyStepDefs {
         List<Integer> propertyValueIds = new ArrayList<Integer>();
         newMultiselectPropertyDto.setValueIds(propertyValueIds);
         controllerResponse = propertyController.createProperty(newMultiselectPropertyDto);
-        System.out.println("HEREEE " + controllerResponse.getStatusCode());
     }
 
     @Then("the following literal properties shall exist")

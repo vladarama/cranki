@@ -12,10 +12,10 @@ public class TodoList {
   @Column(nullable = false)
   private String name;
 
-  @OneToMany(mappedBy = "todoList", cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "todoList", cascade = CascadeType.ALL)
   private List<TodoItem> items;
 
-  @OneToMany(cascade = CascadeType.REMOVE)
+  @OneToMany(cascade = CascadeType.ALL)
   private List<Property> property;
 
   public TodoList(String name) {

@@ -1,5 +1,6 @@
 package ca.mcgill.cranki.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 @Entity
 public class MultiSelectProperty extends Property {
-  @OneToMany(mappedBy = "property")
+  @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE)
   private List<PropertyValue> values;
 
   public MultiSelectProperty(String name, List<PropertyValue> values) {

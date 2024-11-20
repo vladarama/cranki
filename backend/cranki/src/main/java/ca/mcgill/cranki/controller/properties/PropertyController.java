@@ -88,7 +88,6 @@ public class PropertyController {
         todoList.setProperty(existingProperties);
 
         propertyRepository.save(property);
-        todoListRepository.save(todoList);
         return new ResponseEntity<>(property, HttpStatus.CREATED);
     }
 
@@ -113,8 +112,6 @@ public class PropertyController {
 
         property.setName(name);
         propertyRepository.save(property);
-        todoListRepository.save(todoList);
-
         return ResponseEntity.ok("Property successfully updated");
     }
 
