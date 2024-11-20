@@ -83,10 +83,66 @@ public class updatePropertyStepDefs {
        propertyRepository.save(msprop);
     }
 
+    @Given("the following todo lists exist3")
+    public void theFollowingTodoListsExist3(DataTable dataTable) {
+        clearDatabase();
+        var rows = dataTable.asMaps();
+        for (var row : rows) {
+            TodoList todoList = new TodoList();
+            todoList.setName(row.get("name"));
+            todoListRepository.save(todoList);
+        }
+    }
+
+    @And("the following literal properties already exist3")
+    public void theFollowingLiteralPropertiesExist3(DataTable dataTable) {
+        var rows = dataTable.asMaps();
+        for (var row : rows) {
+            TodoList todoList = todoListRepository.getByName(row.get("todoListName"));
+            List<Property> existingProperties = todoList.getProperty();
+
+            LiteralProperty literalProperty = new LiteralProperty();
+            literalProperty.setName(row.get("name"));
+            literalProperty.setTodoList(todoList);
+            existingProperties.add(literalProperty);
+            propertyRepository.save(literalProperty);
+
+            todoList.setProperty(existingProperties);
+            todoListRepository.save(todoList);
+        }
+
+    }
+
+    @And("the following multiselect properties already exist3")
+    public void theFollowingMultiselectPropertiesExist3(DataTable dataTable) {
+        var rows = dataTable.asMaps();
+        for (var row : rows) {
+            TodoList todoList = todoListRepository.getByName(row.get("todoListName"));
+            List<Property> existingProperties = todoList.getProperty();
+
+            MultiSelectProperty multiSelectProperty = new MultiSelectProperty();
+            multiSelectProperty.setName(row.get("name"));
+            multiSelectProperty.setTodoList(todoList);
+
+            existingProperties.add(multiSelectProperty);
+            propertyRepository.save(multiSelectProperty);
+
+            todoList.setProperty(existingProperties);
+            todoListRepository.save(todoList);
+        }
+    }
+
     @When("the user changes the name of a literal property with name {string} to {string}")
     public void theUserChangesTheNameOfALiteralPropertyWithNameTo(String literalPropertyName, String newName) {
        LiteralProperty literalProperty = (LiteralProperty) propertyRepository.getByName(literalPropertyName);
-       controllerResponse = propertyController.updateProperty(literalProperty.getId(), newName);
+       Integer literalPropertyId;
+       if (literalProperty == null) {
+          literalPropertyId = -1;
+       } else {
+           literalPropertyId = literalProperty.getId();
+       }
+
+       controllerResponse = propertyController.updateProperty(literalPropertyId, newName);
     }
 
     @When("the user changes the name of a multiselect property with name {string} to {string}")

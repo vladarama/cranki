@@ -88,6 +88,7 @@ public class PropertyController {
         todoList.setProperty(existingProperties);
 
         propertyRepository.save(property);
+        todoListRepository.save(todoList);
         return new ResponseEntity<>(property, HttpStatus.CREATED);
     }
 
