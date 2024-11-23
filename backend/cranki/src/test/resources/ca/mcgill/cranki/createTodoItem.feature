@@ -53,5 +53,5 @@ Scenario: Attempt to Add a Todo to a non-existing Todo List (Error Flow)
 Scenario: Attempt to Add a Todo with a Description that Exceeds the Maximum Length (Error Flow)
 
   Given no todos have been created
-  When requesting the creation of todo with name "Buy cookies" and description "" to the todo list "Groceries"
+  When requesting the creation of todo with name "Buy cookies" and description exceeding 2000 characters to the todo list "Groceries"
   Then the following error message is returned: "Description exceeds maximum length of 2000 characters"

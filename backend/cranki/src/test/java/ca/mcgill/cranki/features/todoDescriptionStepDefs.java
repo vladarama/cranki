@@ -2,17 +2,19 @@ package ca.mcgill.cranki.features;
 
 import ca.mcgill.cranki.controller.TodoItemController;
 import ca.mcgill.cranki.dto.TodoDescriptionDto;
-import ca.mcgill.cranki.model.TodoList;
 import ca.mcgill.cranki.model.TodoItem;
+import ca.mcgill.cranki.model.TodoList;
 import ca.mcgill.cranki.repository.TodoItemRepository;
 import ca.mcgill.cranki.repository.TodoListRepository;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.When;
 import io.cucumber.datatable.DataTable;
-
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
+
+import static org.junit.Assert.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class todoDescriptionStepDefs {
@@ -65,11 +67,6 @@ public class todoDescriptionStepDefs {
         todoItemRepository.save(testTodoItem);
     }
 
-    @Given("I have no todo items")
-    public void iHaveNoTodoItems() {
-        todoItemRepository.deleteAll();
-    }
-
     @When("I add a description {string} to the todo item")
     public void iAddADescriptionToTheTodoItem(String description) {
         TodoDescriptionDto todoDescriptionDto = new TodoDescriptionDto();
@@ -82,5 +79,44 @@ public class todoDescriptionStepDefs {
         TodoDescriptionDto todoDescriptionDto = new TodoDescriptionDto();
         todoDescriptionDto.setDescription(description);
         controllerResponse = todoItemController.editTodoDescription(testTodoItem.getId(), todoDescriptionDto);
+    }
+
+    @When("I remove the description from the todo item")
+    public void iRemoveTheDescriptionFromTheTodoItem() {
+        TodoDescriptionDto todoDescriptionDto = new TodoDescriptionDto();
+        todoDescriptionDto.setDescription("");
+        controllerResponse = todoItemController.editTodoDescription(testTodoItem.getId(), todoDescriptionDto);
+    }
+
+    @When("I add a description that exceeds 2000 characters to the todo item")
+    public void iAddADescriptionThatExceeds2000CharactersToTheTodoItem() {
+        String description = "a".repeat(2001);
+        TodoDescriptionDto todoDescriptionDto = new TodoDescriptionDto();
+        todoDescriptionDto.setDescription(description);
+        controllerResponse = todoItemController.editTodoDescription(testTodoItem.getId(), todoDescriptionDto);
+    }
+
+    @Then("the todo item {string} should have the description {string}")
+    public void theTodoItemShouldHaveTheDescription(String todoName, String description) {
+        TodoItem todoItem = todoItemRepository.getByName(todoName);
+        assertEquals(description, todoItem.getDescription());
+    }
+
+    @Then("the todo item {string} should have the updated description {string}")
+    public void theTodoItemShouldHaveTheUpdatedDescription(String todoName, String description) {
+        TodoItem todoItem = todoItemRepository.getByName(todoName);
+        assertEquals(description, todoItem.getDescription());
+    }
+
+    @Then("the todo item {string} should have no description")
+    public void theTodoItemShouldHaveNoDescription(String todoName) {
+        TodoItem todoItem = todoItemRepository.getByName(todoName);
+        assertEquals("", todoItem.getDescription());
+    }
+
+    @Then("I should get an error message {string}")
+    public void iShouldSeeAnErrorMessage(String errorMessage) {
+        assertEquals(400, controllerResponse.getStatusCode().value());
+        assertEquals(errorMessage, controllerResponse.getBody());
     }
 }
