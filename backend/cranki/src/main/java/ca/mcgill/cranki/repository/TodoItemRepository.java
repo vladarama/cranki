@@ -10,6 +10,6 @@ public interface TodoItemRepository extends CrudRepository<TodoItem, Integer> {
   TodoItem getByName(String name);
 
   //MP
-  @Query("SELECT t FROM TodoItem t WHERE t.literalPropertyValue = :category")
-    List<TodoItem> findByCategory(String category);
+  @Query("SELECT t FROM TodoItem t WHERE t.literalPropertyValue = :property")
+    List<TodoItem> findByProperty(String property);
 }

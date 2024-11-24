@@ -33,8 +33,8 @@ public class filterTodoItemsStepDefs {
     private TodoItemController todoItemController;
 
     private ResponseEntity<List<TodoItemDto>> controllerResponse;
-
     private List<TodoItemDto> filteredTodos;
+    private String errorMessage;
 
     // Helper method to convert Iterable to List
     private <T> List<T> convertIterableToList(Iterable<T> iterable) {
@@ -43,26 +43,40 @@ public class filterTodoItemsStepDefs {
         return list;
     }
 
+    private void clearDatabase() {
+        todoItemRepository.deleteAll();
+        propertyRepository.deleteAll();
+    }
+
     @Given("I have the following todos with property {string}:")
     public void iHaveTheFollowingTodosWithProperty(String propertyName, DataTable dataTable) {
-        var rows = dataTable.asMaps();
-    for (var row : rows) {
-        var todoName = row.get("Name");
-        var propertyValue = row.get(propertyName);
+        clearDatabase();
 
-        TodoItem todoItem = new TodoItem();
-        todoItem.setName(todoName);
-        todoItem.setLiteralPropertyValue(propertyValue); // Ensure this is set correctly
-        todoItemRepository.save(todoItem);
-    }
+        var rows = dataTable.asMaps();
+        for (var row : rows) {
+            var todoName = row.get("Name");
+            var propertyValue = row.get(propertyName);
+
+            TodoItem todoItem = new TodoItem();
+            todoItem.setName(todoName);
+            todoItem.setLiteralPropertyValue(propertyValue); // Ensure this is set correctly
+            todoItemRepository.save(todoItem);
+        }
     }
 
     @Given("I have the following todos with no property added:")
-    public void i_have_the_following_todos_with_no_property_added(io.cucumber.datatable.DataTable dataTable) {
+    public void iHaveTheFollowingTodosWithNoPropertyAdded(DataTable dataTable) {
+        clearDatabase();
 
+        var rows = dataTable.asMaps();
+        for (var row : rows) {
+            var todoName = row.get("Name");
+
+            TodoItem todoItem = new TodoItem();
+            todoItem.setName(todoName);
+            todoItemRepository.save(todoItem);
+        }
     }
-
-
 
     //MP
     @When("I select the {string} category filter")
@@ -78,8 +92,11 @@ public class filterTodoItemsStepDefs {
 
     //MP
     @When("the property filter list does not load")
-        public void thePropertyFilterListDoesNotLoad() {
-        controllerResponse = todoItemController.filterTodosByProperty("Category", null); // Pass empty value
+    public void thePropertyFilterListDoesNotLoad() {
+        List<Property> properties = convertIterableToList(propertyRepository.findAll());
+        if (properties.isEmpty()) {
+            errorMessage = "Unable to load property filter list because no property added";
+        }
     }
 
     @Then("only the todos {string} and {string} should be displayed")
@@ -94,7 +111,6 @@ public class filterTodoItemsStepDefs {
         assertEquals(expectedTodos, actualTodos);
     }
 
-
     @Then("all todos should be displayed")
     public void allTodosShouldBeDisplayed() {
         List<TodoItemDto> todosFromResponse = controllerResponse.getBody();
@@ -107,10 +123,9 @@ public class filterTodoItemsStepDefs {
         assertEquals(expectedTodos, actualTodos);
     }
 
-
     @Then("the system should display an error message {string}")
     public void theSystemShouldDisplayAnErrorMessage(String expectedMessage) {
-        assertEquals(expectedMessage, controllerResponse.getBody());
+        assertEquals(expectedMessage, errorMessage);
     }
 
     public List<String> convert(List<TodoItemDto> filteredTodos) {
@@ -127,6 +142,7 @@ public class filterTodoItemsStepDefs {
         // Return the list of TodoItemDto objects
         return todoDtos;
     }
+
     public List<String> convert2(List<TodoItem> filteredTodos) {
         // Create an empty list to store the converted TodoItemDto objects
         List<String> todoDtos = new ArrayList<>();

@@ -128,15 +128,13 @@ public class TodoItemController {
             if (value.trim().isEmpty()) {
                 // Check if the property is valid and exists
                 return ResponseEntity.ok(convert(convertIterableToList(todoItemRepository.findAll())));
-            } else if (value == null ) {
-                return new ResponseEntity("Unable to load property filter list because no property added", HttpStatus.I_AM_A_TEAPOT);
-            }else{
-                // Validate the property type
-                if (!property.equalsIgnoreCase("Category")) {
-                    throw new IllegalArgumentException("Unsupported property: " + property);
-                }
+            } else {
+                // // Validate the property type
+                // if (!property.equalsIgnoreCase("Category")) {
+                //     throw new IllegalArgumentException("Unsupported property: " + property);
+                // }
                 // Perform filtering by category
-                filteredTodos = todoItemRepository.findByCategory(value.trim());
+                filteredTodos = todoItemRepository.findByProperty(value.trim());
                 // Check if no results match the filter
                 if (filteredTodos.isEmpty()) {
                     return ResponseEntity.ok(Collections.emptyList());
@@ -148,11 +146,12 @@ public class TodoItemController {
             return ResponseEntity.ok(todoDtos);
 
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>( HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            return new ResponseEntity<>( HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     public List<TodoItemDto> convert(List<TodoItem> filteredTodos) {
         // Create an empty list to store the converted TodoItemDto objects
         List<TodoItemDto> todoDtos = new ArrayList<>();
