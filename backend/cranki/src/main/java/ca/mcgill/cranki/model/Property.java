@@ -2,18 +2,16 @@ package ca.mcgill.cranki.model;
 
 import jakarta.persistence.*;
 
-import java.util.List;
-
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 abstract public class Property {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int id;
-  private String Name;
+  private String name;
 
   public Property(String name) {
-    Name = name;
+    this.name = name;
   }
 
   @ManyToOne
@@ -25,11 +23,11 @@ abstract public class Property {
   }
 
   public String getName() {
-    return Name;
+    return name;
   }
 
   public void setName(String name) {
-    Name = name;
+    this.name = name;
   }
 
   public int getId() {

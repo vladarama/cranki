@@ -13,10 +13,10 @@ public class TodoList {
   @Column(nullable = false)
   private String name;
 
-  @OneToMany(mappedBy = "todoList")
+  @OneToMany(mappedBy = "todoList", cascade = CascadeType.REMOVE)
   private List<TodoItem> items;
 
-  @OneToMany()
+  @OneToMany(cascade = CascadeType.ALL)
   private List<Property> property;
 
   public TodoList(String name) {

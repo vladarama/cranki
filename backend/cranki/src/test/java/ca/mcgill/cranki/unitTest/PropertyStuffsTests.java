@@ -60,7 +60,6 @@ public class PropertyStuffsTests {
       });
       propertyRepository.saveAll(properties);
 
-
       todoList.setProperty(properties);
       todoListRepository.save(todoList);
 
@@ -76,7 +75,7 @@ public class PropertyStuffsTests {
     }
     var todoItem = todoItemRepository.findById(1).get();
 
-//    System.out.println(todoItem.getSpecificProperties().stream().map(specificProperty -> specificProperty.getValues().get(0).getValue()).collect(Collectors.joining()));
+    System.out.println(todoItem.getSpecificProperties().stream().map(specificProperty -> specificProperty.getValues().get(0).getValue()).collect(Collectors.joining()));
 
     System.out.println((long) todoItem.getSpecificProperties().size());
   }

@@ -2,6 +2,8 @@ package ca.mcgill.cranki.dto;
 
 import ca.mcgill.cranki.model.TodoItem;
 
+import java.util.List;
+
 public class TodoItemDto {
   private int id;
   private String name;

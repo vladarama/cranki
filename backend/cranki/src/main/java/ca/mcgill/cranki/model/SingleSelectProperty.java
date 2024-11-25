@@ -7,16 +7,16 @@ import jakarta.persistence.OneToMany;
 import java.util.List;
 
 @Entity
-public class MultiSelectProperty extends Property {
+public class SingleSelectProperty extends Property {
   @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private List<PropertyValue> values;
 
-  public MultiSelectProperty(String name, List<PropertyValue> values) {
+  public SingleSelectProperty(String name) {
     super(name);
-    this.values = values;
   }
 
-  public MultiSelectProperty() {
+  public SingleSelectProperty() {
+
   }
 
   public List<PropertyValue> getValues() {

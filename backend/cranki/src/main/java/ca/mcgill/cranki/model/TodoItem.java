@@ -20,7 +20,7 @@ public class TodoItem {
   @JoinColumn(name = "todo_list_id")
   private TodoList todoList;
 
-  @OneToMany(mappedBy = "todoItem")
+  @OneToMany(mappedBy = "todoItem", cascade = CascadeType.REMOVE)
   private Set<SpecificProperty> specificProperties;
 
   public Set<SpecificProperty> getSpecificProperties() {
