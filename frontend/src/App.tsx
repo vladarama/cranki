@@ -18,6 +18,10 @@ function App() {
   const [editedName, setEditedName] = useState("");
   const [newTodo, setNewTodo] = useState({ name: "", description: "" });
 
+  // State for filtering
+  const [filterProperty, setFilterProperty] = useState<string>("literalPropertyValue");
+  const [filterValue, setFilterValue] = useState<string>("");
+
   useEffect(() => {
     // Fetch multiple todo items
     const fetchTodos = async () => {
@@ -35,6 +39,27 @@ function App() {
 
     fetchTodos();
   }, []);
+
+  // Handle filtering
+  const handleFilter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/todoItems/filter?property=${filterProperty}&value=${encodeURIComponent(filterValue)}`
+      );
+      if (!response.ok) throw new Error("Failed to filter todos");
+      const data: TodoItem[] = await response.json();
+      setTodos(data);
+      setError(null); // Clear errors
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to filter todos");
+      setTodos([]); // Clear todos on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handle adding a new todo item
   // Currently assumes that there is a todo list called 'Tasks'
@@ -204,6 +229,33 @@ function App() {
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               Add Todo
+            </button>
+          </div>
+        </form>
+        {/* Filter Form */}
+        <form onSubmit={handleFilter} className="mb-6">
+          <div className="flex justify-center gap-4 mb-4">
+            <select
+              value={filterProperty}
+              onChange={(e) => setFilterProperty(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="literalPropertyValue">Category</option>
+              {/* Add more options for additional filter properties if needed */}
+            </select>
+            <input
+              type="text"
+              placeholder="Filter Value"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+              required
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Filter
             </button>
           </div>
         </form>
