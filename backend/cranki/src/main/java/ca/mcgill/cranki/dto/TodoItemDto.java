@@ -2,11 +2,25 @@ package ca.mcgill.cranki.dto;
 
 import ca.mcgill.cranki.model.TodoItem;
 
+import java.util.List;
+
 public class TodoItemDto {
   private int id;
   private String name;
   private TodoStatus status;
   private String description;
+  private List<TodoItemSpecificPropertyValues> propertyValues;
+
+  public List<TodoItemSpecificPropertyValues> getPropertyValues() {
+    return propertyValues;
+  }
+
+  public void setPropertyValues(List<TodoItemSpecificPropertyValues> propertyValues) {
+    this.propertyValues = propertyValues;
+  }
+
+
+  public record TodoItemSpecificPropertyValues(int id, String name, PropertyDto.PropertyDtoType type, List<PropertyValueDto> values){}
 
   public enum TodoStatus {
     NOT_DONE,
