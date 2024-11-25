@@ -440,6 +440,44 @@ function App() {
           </div>
         </div>
       </div>
+      {selectedTodo && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+          <div className="p-8 bg-gray-100 shadow-lg rounded-lg text-center w-3/4 max-w-2xl">
+            <button
+              onClick={() => setSelectedTodo(null)}
+              className="text-red-500 hover:text-red-700 text-lg mb-6"
+            >
+              Close
+            </button>
+            <div className="text-3xl font-bold mb-4">Todo Details</div>
+            <div className="text-lg">
+              <p className="mb-4">
+                <strong>ID:</strong> {selectedTodo.id}
+              </p>
+              <p className="mb-4">
+                <strong>Name:</strong> {selectedTodo.name}
+              </p>
+              <p className="mb-4">
+                <strong>Status:</strong>{" "}
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    selectedTodo.status === "DONE"
+                      ? "bg-green-100 text-green-800"
+                      : selectedTodo.status === "IN_PROGRESS"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {selectedTodo.status}
+                </span>
+              </p>
+              <p className="mb-4">
+                <strong>Description:</strong> {selectedTodo.description}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
