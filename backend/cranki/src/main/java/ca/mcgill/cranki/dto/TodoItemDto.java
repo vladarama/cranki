@@ -38,6 +38,14 @@ public class TodoItemDto {
     this.name = todoItem.getName();
     this.status = TodoStatus.valueOf(todoItem.getStatus().name());
     this.description = todoItem.getDescription();
+    this.propertyValues = todoItem.getSpecificProperties().stream()
+      .map(s -> new TodoItemSpecificPropertyValues(
+          s.getProperty().getId(),
+          s.getProperty().getName(),
+          PropertyDto.PropertyDtoType.parseType(s.getProperty()),
+          s.getValues().stream().map(PropertyValueDto::new).toList()
+      ))
+      .toList();
   }
 
   public int getId() { return id;}
