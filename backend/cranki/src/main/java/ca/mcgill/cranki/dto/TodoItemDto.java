@@ -10,6 +10,18 @@ public class TodoItemDto {
   private TodoStatus status;
   private String description;
   private TodoPriority priority;
+  private List<TodoItemSpecificPropertyValues> propertyValues;
+
+  public List<TodoItemSpecificPropertyValues> getPropertyValues() {
+    return propertyValues;
+  }
+
+  public void setPropertyValues(List<TodoItemSpecificPropertyValues> propertyValues) {
+    this.propertyValues = propertyValues;
+  }
+
+
+  public record TodoItemSpecificPropertyValues(int id, String name, PropertyDto.PropertyDtoType type, List<PropertyValueDto> values){}
 
   public enum TodoStatus {
     NOT_DONE,

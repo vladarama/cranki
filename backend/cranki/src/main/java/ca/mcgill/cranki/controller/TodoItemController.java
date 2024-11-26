@@ -31,6 +31,9 @@ public class TodoItemController {
   private PropertyValueRepository propertyValueRepository;
   @Autowired
   private PropertyRepository propertyRepository;
+  
+  @Autowired
+  private SpecificPropertyRepository specificPropertyRepository;
 
   @Autowired
   private SpecificPropertyRepository specificPropertyRepository;
@@ -163,8 +166,8 @@ public class TodoItemController {
       item.setSpecificProperties(itemSpecificProperties);
       return new ResponseEntity<>(HttpStatus.OK);
     }
-
-    @PutMapping(value = { "/todoItem/updateName", "todoItem/updateName/" })
+  
+    @PutMapping( value = { "/todoItem/updateName", "todoItem/updateName/" })
     public ResponseEntity<String> editTodoName(
             @RequestParam(name = "id") int id,
             @RequestParam(name = "name") String name) {

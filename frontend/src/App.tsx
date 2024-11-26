@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -25,6 +26,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
+
 // Define the shape of a single todo item
 interface TodoItem {
   id: number;
@@ -41,12 +43,15 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editedName, setEditedName] = useState("");
+
   const [newTodo, setNewTodo] = useState({
     name: "",
     description: "",
     priority: "MEDIUM",
   });
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null); // New state for selected todo
+
 
   useEffect(() => {
     // Fetch multiple todo items
@@ -435,7 +440,70 @@ function App() {
                     ))}
                   </SortableContext>
                 </DndContext>
-              </TableBody>
+        
+                {todos.map((todo) => (
+                  <TableRow key={todo.id} className="cursor-pointer" onClick={() => setSelectedTodo(todo)}>
+                  <TableCell className="text-center">{todo.id}</TableCell>
+                  <TableCell
+                    className="text-center cursor-pointer hover:bg-gray-50"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent row click from opening detail view
+                      setIsEditing(todo.id);
+                      setEditedName(todo.name);
+                    }}
+                  >
+                    {isEditing === todo.id ? (
+                      <input
+                        type="text"
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, todo.id)}
+                        onBlur={() => handleNameSubmit(todo.id)}
+                        className="w-full px-2 py-1 text-center border rounded"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="hover:text-blue-600">{todo.name}</span>
+                    )}
+                  </TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          todo.status === "DONE"
+                            ? "bg-green-100 text-green-800"
+                            : todo.status === "IN_PROGRESS"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {todo.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleStatus(todo.id);
+                        }}
+                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                      >
+                        Toggle Status
+                      </button>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(todo.id);
+                        }}
+                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+           </TableBody>
             </Table>
           </div>
         </div>
