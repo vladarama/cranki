@@ -27,6 +27,7 @@ import {
 } from "@dnd-kit/sortable";
 
 
+
 // Define the shape of a single todo item
 interface TodoItem {
   id: number;
@@ -42,7 +43,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedName, setEditedName] = useState("");
+
 
   const [newTodo, setNewTodo] = useState({
     name: "",
@@ -50,6 +53,8 @@ function App() {
     priority: "MEDIUM",
   });
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  const [editedDescription, setEditedDescription] = useState("");
 
   const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null); // New state for selected todo
 
@@ -137,6 +142,40 @@ function App() {
     }
   };
 
+  const handleDescriptionSubmit = async (id: number, newDescription: string) => {
+    if (!todos) return;
+
+    try {
+      const response = await fetch(
+          `http://localhost:8080/todoItem/${id}/updateDescription`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ description: newDescription }),
+          }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      setTodos((prev) =>
+          prev.map((item) =>
+              item.id === id ? { ...item, description: newDescription } : item
+          )
+      );
+      setSelectedTodo((prev) =>
+          prev ? { ...prev, description: newDescription } : null
+      );
+      setIsEditingDescription(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update description");
+    }
+  };
+
   // Toggle the status of a todo item
   const toggleStatus = async (id: number) => {
     const todo = todos.find((item) => item.id === id);
@@ -193,15 +232,20 @@ function App() {
   };
 
   // Handle key press events for the edit input
-  const handleKeyPress = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    id: number
-  ) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number, type: string) => {
+
     if (e.key === "Enter") {
-      handleNameSubmit(id);
+      if (type === "name") {
+        handleNameSubmit(id);
+      }
+      else if (type === "description") {
+        handleDescriptionSubmit(id, editedDescription);
+      }
     } else if (e.key === "Escape") {
       setIsEditing(null);
       setEditedName("");
+      setIsEditingDescription(false);
+      setEditedDescription("");
     }
   };
 
@@ -458,7 +502,7 @@ function App() {
                         type="text"
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
-                        onKeyDown={(e) => handleKeyPress(e, todo.id)}
+                        onKeyDown={(e) => handleKeyPress(e, todo.id, "name")}
                         onBlur={() => handleNameSubmit(todo.id)}
                         className="w-full px-2 py-1 text-center border rounded"
                         autoFocus
@@ -541,7 +585,31 @@ function App() {
                 </span>
               </p>
               <p className="mb-4">
-                <strong>Description:</strong> {selectedTodo.description}
+                <strong>Description:</strong>{" "}
+                <button
+                    onClick={() => {
+                      setIsEditingDescription(true)
+                      setEditedDescription(selectedTodo.description)
+                    }}
+                    className="ml-2 text-blue-500 hover:underline"
+                >
+                  Edit
+                </button>
+              </p>
+              <p className="mb-4">
+                {isEditingDescription ? (
+                    <input
+                        type="text"
+                        value={editedDescription}
+                        onChange={(e) => setEditedDescription(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, selectedTodo.id, "description")}
+                        onBlur={() => handleDescriptionSubmit(selectedTodo.id, editedDescription)}
+                        className="w-full px-2 py-1 text-center border rounded"
+                        autoFocus
+                    />
+                ) : (
+                    <span>{selectedTodo.description}</span>
+                )}
               </p>
             </div>
           </div>

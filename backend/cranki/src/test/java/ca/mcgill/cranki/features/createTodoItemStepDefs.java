@@ -87,6 +87,16 @@ public class createTodoItemStepDefs {
         controllerResponse = todoItemController.createTodoItem(newItem, todoListName);
     }
 
+    @When("requesting the creation of todo with name {string} and description exceeding 2000 characters to the todo list {string}")
+    public void requestingTheCreationOfTodoWithNameAndDescriptionExceeding2000Characters(String name, String todoListName) {
+        String description = "a".repeat(2001);
+        TodoItemDto newItem = new TodoItemDto();
+        newItem.setName(name);
+        newItem.setDescription(description);
+
+        controllerResponse = todoItemController.createTodoItem(newItem, todoListName);
+    }
+
     @Then("the todo with name {string} and description {string} exists with status {string} in the todo list {string}.")
     public void theTodoWithNameAndDescriptionAndStateNotDoneExists(String name, String description, String status, String todoListName) {
         TodoItem item = todoItemRepository.getByName(name);
