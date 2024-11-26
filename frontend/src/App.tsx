@@ -35,7 +35,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedName, setEditedName] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
   const [newTodo, setNewTodo] = useState({ name: "", description: "" });
   const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null); // New state for selected todo
   const [newProperty, setNewProperty] = useState({ name: "", type: "LITERAL" });
@@ -63,6 +65,10 @@ function App() {
     }
   };
 
+  // State for filtering
+  const [filterProperty, setFilterProperty] = useState<string>("literalPropertyValue");
+  const [filterValue, setFilterValue] = useState<string>("");
+
   useEffect(() => {
     // Fetch multiple todo items
     const fetchTodos = async () => {
@@ -82,6 +88,27 @@ function App() {
     fetchTodos();
     fetchProperties();
   }, []);
+
+  // Handle filtering
+  const handleFilter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/todoItems/filter?property=${filterProperty}&value=${encodeURIComponent(filterValue)}`
+      );
+      if (!response.ok) throw new Error("Failed to filter todos");
+      const data: TodoItem[] = await response.json();
+      setTodos(data);
+      setError(null); // Clear errors
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to filter todos");
+      setTodos([]); // Clear todos on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handle adding a new todo item
   // Currently assumes that there is a todo list called 'Tasks'
@@ -167,6 +194,40 @@ function App() {
     }
   };
 
+  const handleDescriptionSubmit = async (id: number, newDescription: string) => {
+    if (!todos) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/todoItem/${id}/updateDescription`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ description: newDescription }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      setTodos((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, description: newDescription } : item
+        )
+      );
+      setSelectedTodo((prev) =>
+        prev ? { ...prev, description: newDescription } : null
+      );
+      setIsEditingDescription(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update description");
+    }
+  };
+
   // Toggle the status of a todo item
   const toggleStatus = async (id: number) => {
     const todo = todos.find((item) => item.id === id);
@@ -221,13 +282,21 @@ function App() {
       setError(err instanceof Error ? err.message : "Failed to delete todo");
     }
   };
+
   // Handle key press events for the edit input
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number, type: string) => {
     if (e.key === "Enter") {
-      handleNameSubmit(id);
+      if (type === "name") {
+        handleNameSubmit(id);
+      }
+      else if (type === "description") {
+        handleDescriptionSubmit(id, editedDescription);
+      }
     } else if (e.key === "Escape") {
       setIsEditing(null);
       setEditedName("");
+      setIsEditingDescription(false);
+      setEditedDescription("");
     }
   };
 
@@ -369,6 +438,33 @@ function App() {
           </div>
         </div>
 
+        {/* Filter Form */}
+        <form onSubmit={handleFilter} className="mb-6">
+          <div className="flex justify-center gap-4 mb-4">
+            <select
+              value={filterProperty}
+              onChange={(e) => setFilterProperty(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="literalPropertyValue">Category</option>
+              {/* Add more options for additional filter properties if needed */}
+            </select>
+            <input
+              type="text"
+              placeholder="Filter Value"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+              required
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Filter
+            </button>
+          </div>
+        </form>
         {/* Todo Item List*/}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
@@ -404,7 +500,7 @@ function App() {
                           type="text"
                           value={editedName}
                           onChange={(e) => setEditedName(e.target.value)}
-                          onKeyDown={(e) => handleKeyPress(e, todo.id)}
+                          onKeyDown={(e) => handleKeyPress(e, todo.id, "name")}
                           onBlur={() => handleNameSubmit(todo.id)}
                           className="w-full px-2 py-1 text-center border rounded"
                           autoFocus
@@ -513,13 +609,32 @@ function App() {
                 </span>
               </p>
               <p className="mb-4">
-                <strong>Description:</strong> {selectedTodo.description}
+                <strong>Description:</strong>{" "}
+                <button
+                  onClick={() => {
+                    setIsEditingDescription(true)
+                    setEditedDescription(selectedTodo.description)
+                  }}
+                  className="ml-2 text-blue-500 hover:underline"
+                >
+                  Edit
+                </button>
               </p>
-              {/* {properties.map((property) => (
-                <p key={property.id} className="mb-4">
-                  <strong>{property.name}:</strong> {selectedTodo.properties[property.name] || ""}
-                </p>
-              ))} */}
+              <p className="mb-4">
+                {isEditingDescription ? (
+                  <input
+                    type="text"
+                    value={editedDescription}
+                    onChange={(e) => setEditedDescription(e.target.value)}
+                    onKeyDown={(e) => handleKeyPress(e, selectedTodo.id, "description")}
+                    onBlur={() => handleDescriptionSubmit(selectedTodo.id, editedDescription)}
+                    className="w-full px-2 py-1 text-center border rounded"
+                    autoFocus
+                  />
+                ) : (
+                  <span>{selectedTodo.description}</span>
+                )}
+              </p>
             </div>
           </div>
         </div>

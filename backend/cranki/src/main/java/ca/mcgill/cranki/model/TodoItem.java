@@ -14,6 +14,8 @@ public class TodoItem {
   private String name;
   private TodoStatus status;
   private String description;
+  //filter todo
+  private String literalPropertyValue; // for storing category
 
   @ManyToOne
   @JoinColumn(name = "todo_list_id")
@@ -88,5 +90,14 @@ public class TodoItem {
   public void setTodoList(TodoList todoList) {
     this.todoList = todoList;
   }
+
+ // Getter and Setter for literalPropertyValue
+    public String getLiteralPropertyValue() {
+        return literalPropertyValue;
+    }
+
+    public void setLiteralPropertyValue(String literalPropertyValue) {
+        this.literalPropertyValue = literalPropertyValue;
+    }
 }
 

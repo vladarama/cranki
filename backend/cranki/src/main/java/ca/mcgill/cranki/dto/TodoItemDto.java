@@ -36,7 +36,7 @@ public class TodoItemDto {
   ) {
     this.id = todoItem.getId();
     this.name = todoItem.getName();
-    this.status = TodoStatus.valueOf(todoItem.getStatus().name());
+    this.status = todoItem.getStatus() != null ? TodoStatus.valueOf(todoItem.getStatus().name()) : TodoStatus.NOT_DONE;
     this.description = todoItem.getDescription();
     this.propertyValues = todoItem.getSpecificProperties().stream()
       .map(s -> new TodoItemSpecificPropertyValues(
