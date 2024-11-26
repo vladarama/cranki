@@ -8,7 +8,7 @@ interface TodoItem {
   name: string;
   description: string;
   status: "NOT_DONE" | "DONE" | "IN_PROGRESS";
-  properties: { [key: string]: string }; // Add properties field
+  propertyValues: { [key: string]: string }; // Use propertyValues field
 }
 
 interface Property {
@@ -27,6 +27,8 @@ function App() {
   const [newTodo, setNewTodo] = useState({ name: "", description: "" });
   const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null); // New state for selected todo
   const [newProperty, setNewProperty] = useState({ name: "", type: "LITERAL" });
+  const [editingProperty, setEditingProperty] = useState<{ todoId: number, propertyId: number } | null>(null);
+  const [editedPropertyValue, setEditedPropertyValue] = useState("");
 
   // Fetch properties for the todo list
   const fetchProperties = async () => {
@@ -55,6 +57,7 @@ function App() {
         const response = await fetch("http://localhost:8080/todoItems");
         if (!response.ok) throw new Error("Failed to fetch todos");
         const data: TodoItem[] = await response.json();
+        console.log(data);
         setTodos(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch todos");
@@ -215,6 +218,47 @@ function App() {
     }
   };
 
+  // Function to handle property value submission
+  const handlePropertyValueSubmit = async (todoId: number, propertyId: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/todoItem/${todoId}/properties/value`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          propertyId: propertyId,
+          type: "LITERAL", // Assuming type is LITERAL, adjust as needed
+          valueId: null,
+          value: editedPropertyValue,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      // Update local state with new property value
+      setTodos((prev) =>
+        prev.map((todo) =>
+          todo.id === todoId
+            ? {
+              ...todo,
+              propertyValues: {
+                ...todo.propertyValues,
+                [properties.find((p) => p.id === propertyId)?.name || ""]: editedPropertyValue,
+              },
+            }
+            : todo
+        )
+      );
+      setEditingProperty(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update property value");
+    }
+  };
+
   // Loading, error, and empty states for multiple todos
   if (isLoading)
     return (
@@ -353,11 +397,30 @@ function App() {
                         {todo.status}
                       </span>
                     </TableCell>
-                    {/* {properties.map((property) => (
-                      <TableCell key={property.id} className="text-center">
-                        {todo.properties[property.name] || ""}
+                    {properties.map((property) => (
+                      <TableCell
+                        key={property.id}
+                        className="text-center cursor-pointer hover:bg-gray-50"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click from opening detail view
+                          setEditingProperty({ todoId: todo.id, propertyId: property.id });
+                          setEditedPropertyValue(todo.propertyValues?.[property.name] || "");
+                        }}
+                      >
+                        {editingProperty?.todoId === todo.id && editingProperty?.propertyId === property.id ? (
+                          <input
+                            type="text"
+                            value={editedPropertyValue}
+                            onChange={(e) => setEditedPropertyValue(e.target.value)}
+                            onBlur={() => handlePropertyValueSubmit(todo.id, property.id)}
+                            className="w-full px-2 py-1 text-center border rounded"
+                            autoFocus
+                          />
+                        ) : (
+                          todo.propertyValues?.[property.name] || ""
+                        )}
                       </TableCell>
-                    ))} */}
+                    ))}
                     <TableCell className="text-center">
                       <button
                         onClick={(e) => {
