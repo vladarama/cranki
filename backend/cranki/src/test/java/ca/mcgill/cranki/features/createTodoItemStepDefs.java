@@ -4,6 +4,7 @@ import ca.mcgill.cranki.controller.TodoItemController;
 import ca.mcgill.cranki.dto.TodoItemDto;
 import ca.mcgill.cranki.model.TodoItem;
 import ca.mcgill.cranki.model.TodoList;
+import ca.mcgill.cranki.repository.PropertyRepository;
 import ca.mcgill.cranki.repository.TodoItemRepository;
 import ca.mcgill.cranki.repository.TodoListRepository;
 import io.cucumber.datatable.DataTable;
@@ -30,12 +31,15 @@ public class createTodoItemStepDefs {
     private TodoListRepository todoListRepository;
 
     @Autowired
+    private PropertyRepository propertyRepository;
+
+    @Autowired
     private TodoItemController todoItemController;
 
     private ResponseEntity<Object> controllerResponse;
 
+
     private void clearDatabase() {
-        todoItemRepository.deleteAll();
         todoListRepository.deleteAll();
     }
 
@@ -76,6 +80,16 @@ public class createTodoItemStepDefs {
 
     @When("requesting the creation of todo with name {string} and description {string} to the todo list {string}")
     public void requestingTheCreationOfTodoWithNameAndDescription(String name, String description, String todoListName) {
+        TodoItemDto newItem = new TodoItemDto();
+        newItem.setName(name);
+        newItem.setDescription(description);
+
+        controllerResponse = todoItemController.createTodoItem(newItem, todoListName);
+    }
+
+    @When("requesting the creation of todo with name {string} and description exceeding 2000 characters to the todo list {string}")
+    public void requestingTheCreationOfTodoWithNameAndDescriptionExceeding2000Characters(String name, String todoListName) {
+        String description = "a".repeat(2001);
         TodoItemDto newItem = new TodoItemDto();
         newItem.setName(name);
         newItem.setDescription(description);

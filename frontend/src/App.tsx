@@ -40,13 +40,23 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedName, setEditedName] = useState("");
+
   const [newTodo, setNewTodo] = useState({
     name: "",
     description: "",
     priority: "MEDIUM",
   });
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  const [editedDescription, setEditedDescription] = useState("");
+
+  const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null); // New state for selected todo
+
+  // State for filtering
+  const [filterProperty, setFilterProperty] = useState<string>("literalPropertyValue");
+  const [filterValue, setFilterValue] = useState<string>("");
 
   useEffect(() => {
     // Fetch multiple todo items
@@ -72,6 +82,27 @@ function App() {
 
     fetchTodos();
   }, [sortDirection]);
+
+  // Handle filtering
+  const handleFilter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/todoItems/filter?property=${filterProperty}&value=${encodeURIComponent(filterValue)}`
+      );
+      if (!response.ok) throw new Error("Failed to filter todos");
+      const data: TodoItem[] = await response.json();
+      setTodos(data);
+      setError(null); // Clear errors
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to filter todos");
+      setTodos([]); // Clear todos on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handle adding a new todo item
   // Currently assumes that there is a todo list called 'Tasks'
@@ -129,6 +160,45 @@ function App() {
       setIsEditing(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update name");
+    }
+  };
+
+  const handleDescriptionSubmit = async (
+    id: number,
+    newDescription: string
+  ) => {
+    if (!todos) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/todoItem/${id}/updateDescription`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ description: newDescription }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      setTodos((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, description: newDescription } : item
+        )
+      );
+      setSelectedTodo((prev) =>
+        prev ? { ...prev, description: newDescription } : null
+      );
+      setIsEditingDescription(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update description"
+      );
     }
   };
 
@@ -190,13 +260,20 @@ function App() {
   // Handle key press events for the edit input
   const handleKeyPress = (
     e: React.KeyboardEvent<HTMLInputElement>,
-    id: number
+    id: number,
+    type: string
   ) => {
     if (e.key === "Enter") {
-      handleNameSubmit(id);
+      if (type === "name") {
+        handleNameSubmit(id);
+      } else if (type === "description") {
+        handleDescriptionSubmit(id, editedDescription);
+      }
     } else if (e.key === "Escape") {
       setIsEditing(null);
       setEditedName("");
+      setIsEditingDescription(false);
+      setEditedDescription("");
     }
   };
 
@@ -359,7 +436,33 @@ function App() {
             </button>
           </div>
         </form>
-
+        {/* Filter Form */}
+        <form onSubmit={handleFilter} className="mb-6">
+          <div className="flex justify-center gap-4 mb-4">
+            <select
+              value={filterProperty}
+              onChange={(e) => setFilterProperty(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="literalPropertyValue">Category</option>
+              {/* Add more options for additional filter properties if needed */}
+            </select>
+            <input
+              type="text"
+              placeholder="Filter Value"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+              required
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Filter
+            </button>
+          </div>
+        </form>
         {/* Todo Item List*/}
         <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
           <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
@@ -370,16 +473,10 @@ function App() {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="w-[50px]"> </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    ID
-                  </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    Name
-                  </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
+                  <TableHead className="text-center">ID</TableHead>
+                  <TableHead className="text-center">Name</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">
                     <div className="flex items-center justify-center gap-2">
                       Priority
                       <Button
@@ -395,12 +492,9 @@ function App() {
                       </Button>
                     </div>
                   </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    Status Toggle
-                  </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    Delete
-                  </TableHead>
+                  <TableHead className="text-center">Toggle Status</TableHead>
+                  <TableHead className="text-center">View Details</TableHead>
+                  <TableHead className="text-center">Delete</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -430,7 +524,8 @@ function App() {
                         }}
                         onNameChange={setEditedName}
                         onNameSubmit={() => handleNameSubmit(todo.id)}
-                        onKeyPress={(e) => handleKeyPress(e, todo.id)}
+                        onKeyPress={(e) => handleKeyPress(e, todo.id, "name")}
+                        onRowClick={() => setSelectedTodo(todo)}
                       />
                     ))}
                   </SortableContext>
@@ -440,6 +535,117 @@ function App() {
           </div>
         </div>
       </div>
+      {selectedTodo && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="p-8 bg-white shadow-lg rounded-lg text-center w-3/4 max-w-2xl">
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={() => setSelectedTodo(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="text-3xl font-bold mb-6">Todo Details</div>
+            <div className="text-lg space-y-4">
+              <p>
+                <strong>ID:</strong> {selectedTodo.id}
+              </p>
+              <p>
+                <strong>Name:</strong> {selectedTodo.name}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    selectedTodo.status === "DONE"
+                      ? "bg-green-100 text-green-800"
+                      : selectedTodo.status === "IN_PROGRESS"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {selectedTodo.status}
+                </span>
+              </p>
+              <div>
+                <strong>Description:</strong>{" "}
+                {isEditingDescription ? (
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      value={editedDescription}
+                      onChange={(e) => setEditedDescription(e.target.value)}
+                      onKeyDown={(e) =>
+                        handleKeyPress(e, selectedTodo.id, "description")
+                      }
+                      onBlur={() =>
+                        handleDescriptionSubmit(
+                          selectedTodo.id,
+                          editedDescription
+                        )
+                      }
+                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 group flex items-center justify-center gap-2">
+                    <span>{selectedTodo.description}</span>
+                    <button
+                      onClick={() => {
+                        setIsEditingDescription(true);
+                        setEditedDescription(selectedTodo.description);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-blue-500 hover:text-blue-600"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p>
+                <strong>Priority:</strong>{" "}
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    selectedTodo.priority === "HIGH"
+                      ? "bg-red-100 text-red-800"
+                      : selectedTodo.priority === "MEDIUM"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-green-100 text-green-800"
+                  }`}
+                >
+                  {selectedTodo.priority}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
