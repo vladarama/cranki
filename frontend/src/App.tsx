@@ -32,10 +32,17 @@ function App() {
   const fetchProperties = async () => {
     try {
       const response = await fetch("http://localhost:8080/todolist/Tasks/properties");
-      if (!response.ok) throw new Error("Failed to fetch properties");
-      const data: Property[] = await response.json();
-      console.log(data)
-      setProperties(data);
+      if (!response.ok) throw new Error("Failed to fetch property IDs");
+      const propertyIds: number[] = await response.json();
+
+      const propertyPromises = propertyIds.map(async (id) => {
+        const propertyResponse = await fetch(`http://localhost:8080/property/${id}`);
+        if (!propertyResponse.ok) throw new Error("Failed to fetch property");
+        return propertyResponse.json();
+      });
+
+      const propertiesData: Property[] = await Promise.all(propertyPromises);
+      setProperties(propertiesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch properties");
     }
