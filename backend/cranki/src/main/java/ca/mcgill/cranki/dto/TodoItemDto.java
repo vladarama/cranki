@@ -16,7 +16,7 @@ public class TodoItemDto {
     IN_PROGRESS,
     DONE,
   }
-  
+
   public enum TodoPriority {
     LOW,
     MEDIUM,
