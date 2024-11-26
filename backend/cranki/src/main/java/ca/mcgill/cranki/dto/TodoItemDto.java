@@ -3,6 +3,7 @@ package ca.mcgill.cranki.dto;
 import ca.mcgill.cranki.model.TodoItem;
 
 import java.util.List;
+import java.util.Collections;
 
 public class TodoItemDto {
   private int id;
@@ -38,14 +39,16 @@ public class TodoItemDto {
     this.name = todoItem.getName();
     this.status = todoItem.getStatus() != null ? TodoStatus.valueOf(todoItem.getStatus().name()) : TodoStatus.NOT_DONE;
     this.description = todoItem.getDescription();
-    this.propertyValues = todoItem.getSpecificProperties().stream()
-      .map(s -> new TodoItemSpecificPropertyValues(
-          s.getProperty().getId(),
-          s.getProperty().getName(),
-          PropertyDto.PropertyDtoType.parseType(s.getProperty()),
-          s.getValues().stream().map(PropertyValueDto::new).toList()
-      ))
-      .toList();
+    this.propertyValues = todoItem.getSpecificProperties() != null ? 
+        todoItem.getSpecificProperties().stream()
+            .map(s -> new TodoItemSpecificPropertyValues(
+                s.getProperty().getId(),
+                s.getProperty().getName(),
+                PropertyDto.PropertyDtoType.parseType(s.getProperty()),
+                s.getValues().stream().map(PropertyValueDto::new).toList()
+            ))
+            .toList() : 
+        Collections.emptyList();
   }
 
   public int getId() { return id;}
