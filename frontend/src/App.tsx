@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -26,8 +25,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-
-
 // Define the shape of a single todo item
 interface TodoItem {
   id: number;
@@ -45,7 +42,6 @@ function App() {
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedName, setEditedName] = useState("");
-
 
   const [newTodo, setNewTodo] = useState({
     name: "",
@@ -142,19 +138,22 @@ function App() {
     }
   };
 
-  const handleDescriptionSubmit = async (id: number, newDescription: string) => {
+  const handleDescriptionSubmit = async (
+    id: number,
+    newDescription: string
+  ) => {
     if (!todos) return;
 
     try {
       const response = await fetch(
-          `http://localhost:8080/todoItem/${id}/updateDescription`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ description: newDescription }),
-          }
+        `http://localhost:8080/todoItem/${id}/updateDescription`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ description: newDescription }),
+        }
       );
 
       if (!response.ok) {
@@ -163,16 +162,18 @@ function App() {
       }
 
       setTodos((prev) =>
-          prev.map((item) =>
-              item.id === id ? { ...item, description: newDescription } : item
-          )
+        prev.map((item) =>
+          item.id === id ? { ...item, description: newDescription } : item
+        )
       );
       setSelectedTodo((prev) =>
-          prev ? { ...prev, description: newDescription } : null
+        prev ? { ...prev, description: newDescription } : null
       );
       setIsEditingDescription(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update description");
+      setError(
+        err instanceof Error ? err.message : "Failed to update description"
+      );
     }
   };
 
@@ -232,13 +233,15 @@ function App() {
   };
 
   // Handle key press events for the edit input
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number, type: string) => {
-
+  const handleKeyPress = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    id: number,
+    type: string
+  ) => {
     if (e.key === "Enter") {
       if (type === "name") {
         handleNameSubmit(id);
-      }
-      else if (type === "description") {
+      } else if (type === "description") {
         handleDescriptionSubmit(id, editedDescription);
       }
     } else if (e.key === "Escape") {
@@ -419,16 +422,10 @@ function App() {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="w-[50px]"> </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    ID
-                  </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    Name
-                  </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
+                  <TableHead className="text-center">ID</TableHead>
+                  <TableHead className="text-center">Name</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">
                     <div className="flex items-center justify-center gap-2">
                       Priority
                       <Button
@@ -444,16 +441,12 @@ function App() {
                       </Button>
                     </div>
                   </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    Status Toggle
-                  </TableHead>
-                  <TableHead className="text-center whitespace-nowrap">
-                    Delete
-                  </TableHead>
+                  <TableHead className="text-center">Toggle Status</TableHead>
+                  <TableHead className="text-center">View Details</TableHead>
+                  <TableHead className="text-center">Delete</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -480,97 +473,49 @@ function App() {
                         }}
                         onNameChange={setEditedName}
                         onNameSubmit={() => handleNameSubmit(todo.id)}
-                        onKeyPress={(e) => handleKeyPress(e, todo.id)}
+                        onKeyPress={(e) => handleKeyPress(e, todo.id, "name")}
+                        onRowClick={() => setSelectedTodo(todo)}
                       />
                     ))}
                   </SortableContext>
                 </DndContext>
-              
-                {todos.map((todo) => (
-                  <TableRow key={todo.id} className="cursor-pointer" onClick={() => setSelectedTodo(todo)}>
-                  <TableCell className="text-center">{todo.id}</TableCell>
-                  <TableCell
-                    className="text-center cursor-pointer hover:bg-gray-50"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent row click from opening detail view
-                      setIsEditing(todo.id);
-                      setEditedName(todo.name);
-                    }}
-                  >
-                    {isEditing === todo.id ? (
-                      <input
-                        type="text"
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        onKeyDown={(e) => handleKeyPress(e, todo.id, "name")}
-                        onBlur={() => handleNameSubmit(todo.id)}
-                        className="w-full px-2 py-1 text-center border rounded"
-                        autoFocus
-                      />
-                    ) : (
-                      <span className="hover:text-blue-600">{todo.name}</span>
-                    )}
-                  </TableCell>
-                    <TableCell className="text-center">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          todo.status === "DONE"
-                            ? "bg-green-100 text-green-800"
-                            : todo.status === "IN_PROGRESS"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {todo.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleStatus(todo.id);
-                        }}
-                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                      >
-                        Toggle Status
-                      </button>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(todo.id);
-                        }}
-                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-           </TableBody>
+              </TableBody>
             </Table>
           </div>
         </div>
       </div>
       {selectedTodo && (
-        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
-          <div className="p-8 bg-gray-100 shadow-lg rounded-lg text-center w-3/4 max-w-2xl">
-            <button
-              onClick={() => setSelectedTodo(null)}
-              className="text-red-500 hover:text-red-700 text-lg mb-6"
-            >
-              Close
-            </button>
-            <div className="text-3xl font-bold mb-4">Todo Details</div>
-            <div className="text-lg">
-              <p className="mb-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="p-8 bg-white shadow-lg rounded-lg text-center w-3/4 max-w-2xl">
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={() => setSelectedTodo(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="text-3xl font-bold mb-6">Todo Details</div>
+            <div className="text-lg space-y-4">
+              <p>
                 <strong>ID:</strong> {selectedTodo.id}
               </p>
-              <p className="mb-4">
+              <p>
                 <strong>Name:</strong> {selectedTodo.name}
               </p>
-              <p className="mb-4">
+              <p>
                 <strong>Status:</strong>{" "}
                 <span
                   className={`px-3 py-1 rounded-full text-sm ${
@@ -584,39 +529,72 @@ function App() {
                   {selectedTodo.status}
                 </span>
               </p>
-              <p className="mb-4">
+              <div>
                 <strong>Description:</strong>{" "}
-                <button
-                    onClick={() => {
-                      setIsEditingDescription(true)
-                      setEditedDescription(selectedTodo.description)
-                    }}
-                    className="ml-2 text-blue-500 hover:underline"
-                >
-                  Edit
-                </button>
-              </p>
-              <p className="mb-4">
                 {isEditingDescription ? (
+                  <div className="mt-2">
                     <input
-                        type="text"
-                        value={editedDescription}
-                        onChange={(e) => setEditedDescription(e.target.value)}
-                        onKeyDown={(e) => handleKeyPress(e, selectedTodo.id, "description")}
-                        onBlur={() => handleDescriptionSubmit(selectedTodo.id, editedDescription)}
-                        className="w-full px-2 py-1 text-center border rounded"
-                        autoFocus
+                      type="text"
+                      value={editedDescription}
+                      onChange={(e) => setEditedDescription(e.target.value)}
+                      onKeyDown={(e) =>
+                        handleKeyPress(e, selectedTodo.id, "description")
+                      }
+                      onBlur={() =>
+                        handleDescriptionSubmit(
+                          selectedTodo.id,
+                          editedDescription
+                        )
+                      }
+                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                      autoFocus
                     />
+                  </div>
                 ) : (
+                  <div className="mt-2 group flex items-center justify-center gap-2">
                     <span>{selectedTodo.description}</span>
+                    <button
+                      onClick={() => {
+                        setIsEditingDescription(true);
+                        setEditedDescription(selectedTodo.description);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-blue-500 hover:text-blue-600"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 )}
+              </div>
+              <p>
+                <strong>Priority:</strong>{" "}
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    selectedTodo.priority === "HIGH"
+                      ? "bg-red-100 text-red-800"
+                      : selectedTodo.priority === "MEDIUM"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-green-100 text-green-800"
+                  }`}
+                >
+                  {selectedTodo.priority}
+                </span>
               </p>
             </div>
           </div>
         </div>
       )}
-
-
     </div>
   );
 }

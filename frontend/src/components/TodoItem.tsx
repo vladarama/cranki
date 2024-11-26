@@ -2,14 +2,14 @@ import React from "react";
 import { TableRow, TableCell } from "./ui/table";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Eye } from "lucide-react";
 
 interface TodoItemProps {
   id: number;
   name: string;
+  description: string;
   status: "NOT_DONE" | "DONE" | "IN_PROGRESS";
   priority: "LOW" | "MEDIUM" | "HIGH";
-  description: string;
   isEditing: boolean;
   editedName: string;
   onStatusToggle: () => void;
@@ -19,6 +19,7 @@ interface TodoItemProps {
   onNameChange: (name: string) => void;
   onNameSubmit: () => void;
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onRowClick: () => void;
 }
 
 const TodoItem: React.FC<TodoItemProps> = ({
@@ -35,6 +36,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
   onNameChange,
   onNameSubmit,
   onKeyPress,
+  onRowClick,
 }) => {
   const {
     attributes,
@@ -51,8 +53,23 @@ const TodoItem: React.FC<TodoItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Only trigger row click if clicking the row itself or the name/description cells
+    if (
+      e.target === e.currentTarget ||
+      (e.target as HTMLElement).closest('[data-click-allowed="true"]')
+    ) {
+      onRowClick();
+    }
+  };
+
   return (
-    <TableRow ref={setNodeRef} style={style}>
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      onClick={handleRowClick}
+      className="cursor-pointer hover:bg-gray-50"
+    >
       <TableCell className="w-[50px]">
         <button
           className="cursor-grab hover:bg-gray-100 p-1 rounded"
@@ -64,8 +81,12 @@ const TodoItem: React.FC<TodoItemProps> = ({
       </TableCell>
       <TableCell className="text-center">{id}</TableCell>
       <TableCell
+        data-click-allowed="true"
         className="text-center cursor-pointer hover:bg-gray-50"
-        onClick={onNameEdit}
+        onClick={(e) => {
+          e.stopPropagation();
+          onNameEdit();
+        }}
       >
         {isEditing ? (
           <input
@@ -94,7 +115,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
           {status}
         </span>
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
         <select
           value={priority}
           onChange={(e) =>
@@ -113,7 +134,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
           <option value="HIGH">HIGH</option>
         </select>
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
         <button
           onClick={onStatusToggle}
           className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
@@ -121,7 +142,16 @@ const TodoItem: React.FC<TodoItemProps> = ({
           Toggle Status
         </button>
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
+        <button
+          onClick={onRowClick}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors inline-flex items-center gap-2"
+        >
+          <Eye className="h-4 w-4" />
+          View
+        </button>
+      </TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
         <button
           onClick={onDelete}
           className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
