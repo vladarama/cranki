@@ -40,22 +40,31 @@ public class prioritizeTodoItemsStepDefs {
         todoListRepository.deleteAll();
     }
 
-    @Given("the following todos exist in the {string} todo list:")
-    public void theFollowingTodosExistInTheTodoList(String listName, DataTable todos) {
+    @Given("the following todo list exists for the user:")
+    public void theFollowingTodoListExistsForTheUser(DataTable dataTable) {
         clearDatabase();
-
-        // Create and save the TodoList
-        TodoList todoList = new TodoList();
-        todoList.setName(listName);
-        todoListRepository.save(todoList);
-
-        // Add todos to the database
-        List<Map<String, String>> rows = todos.asMaps();
+        var rows = dataTable.asMaps();
         for (var row : rows) {
+            TodoList todoList = new TodoList();
+            todoList.setName(row.get("name"));
+            todoListRepository.save(todoList);
+        }
+    }
+
+    @Given("the following todos exist:")
+    public void theFollowingTodosExist(DataTable existingItems) {
+        todoItemRepository.deleteAll();
+        List<Map<String, String>> rows = existingItems.asMaps();
+        for (var row : rows) {
+            String name = row.get("name");
+            TodoItem.TodoPriority priority = parsePriority(row.get("priority"));
+            String todoListName = row.get("todo list");
+
             TodoItem newItem = new TodoItem();
-            newItem.setName(row.get("Name"));
-            newItem.setPriority(parsePriority(row.get("Priority")));
-            newItem.setTodoList(todoList);
+            newItem.setName(name);
+            newItem.setPriority(priority);
+            newItem.setTodoList(todoListRepository.getByName(todoListName));
+
             todoItemRepository.save(newItem);
         }
     }
@@ -64,61 +73,63 @@ public class prioritizeTodoItemsStepDefs {
     public void theUserCreatesANewTodoWithTheFollowingDetails(DataTable newTodoData) {
         Map<String, String> row = newTodoData.asMaps().get(0);
 
-        // Retrieve the TodoList by name
-        String listName = row.get("list_id");
-        TodoList todoList = todoListRepository.getByName(listName);
+        String name = row.get("name");
+        TodoItem.TodoPriority priority = parsePriority(row.get("priority"));
+        String todoListName = row.get("todo list");
 
-        if (todoList == null) {
-            throw new RuntimeException("Todo list not found");
-        }
-
-        // Create and save the new TodoItem
         TodoItem newItem = new TodoItem();
-        newItem.setName(row.get("Name"));
-        newItem.setPriority(parsePriority(row.get("Priority")));
-        newItem.setTodoList(todoList);
+        newItem.setName(name);
+        newItem.setPriority(priority);
+        newItem.setTodoList(todoListRepository.getByName(todoListName));
+
         todoItemRepository.save(newItem);
     }
 
-    @When("the user requests to set the task with id {int} to {string} priority")
-    public void theUserRequestsToSetTheTaskWithIdToPriority(int id, String priority) {
-        controllerResponse = todoItemController.updateTodoPriority(id, priority.toUpperCase());
+    @When("the user requests to set the task with name {string} to {string} priority:")
+    public void theUserRequestsToSetTheTaskWithIdToPriority(String name, String priority) {
+        TodoItem item = todoItemRepository.getByName(name);
+        if (item == null) {
+            controllerResponse = ResponseEntity.badRequest().body("Task not found");
+            return;
+        }
+        controllerResponse = todoItemController.updateTodoPriority(item.getId(), priority);
     }
 
     @Then("the new todo is added to the list with the following order and priorities:")
     @Then("the todo list is updated with the following order and priorities:")
     public void theTodoListMatchesExpectedOrder(DataTable expectedOrder) {
-        // Convert Iterable to List
         List<TodoItem> items = new ArrayList<>();
         todoItemRepository.findAll().forEach(items::add);
 
-        // Sort items
         items.sort(Comparator.comparing((TodoItem item) -> item.getPriority().ordinal())
                 .reversed()
                 .thenComparing(TodoItem::getId));
 
-        // Compare sorted items to expected order
         List<Map<String, String>> rows = expectedOrder.asMaps();
+        assertEquals(rows.size(), items.size()); // Validate list sizes match
+
         for (int i = 0; i < rows.size(); i++) {
             TodoItem actualItem = items.get(i);
             Map<String, String> expectedRow = rows.get(i);
 
-            assertEquals(expectedRow.get("Name"), actualItem.getName());
-            assertEquals(expectedRow.get("Priority").toUpperCase(), actualItem.getPriority().name());
+            assertEquals(expectedRow.get("name"), actualItem.getName());
+            assertEquals(expectedRow.get("priority"), actualItem.getPriority().name());
+            assertEquals(expectedRow.get("todo list"), actualItem.getTodoList().getName());
         }
     }
 
     @Then("the error message {string} is returned")
     public void theErrorMessageIsReturned(String expectedMessage) {
         // Verify that the error response matches the expected message
-        assertNotNull(controllerResponse);
-        assertEquals(400, controllerResponse.getStatusCode().value());
-        assertEquals(expectedMessage, controllerResponse.getBody());
+        assertNotNull(controllerResponse); // Ensure the response is not null
+        assertEquals(400, controllerResponse.getStatusCode().value()); // Check HTTP status code
+        assertEquals(expectedMessage, controllerResponse.getBody()); // Check the message
     }
 
     private TodoItem.TodoPriority parsePriority(String priority) {
         // Helper to parse priority or return LOW if null/empty
         return (priority == null || priority.isEmpty()) ? TodoItem.TodoPriority.LOW
-                : TodoItem.TodoPriority.valueOf(priority.toUpperCase());
+                : TodoItem.TodoPriority.valueOf(priority);
     }
+
 }

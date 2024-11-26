@@ -14,7 +14,7 @@ public class TodoItemDto {
     IN_PROGRESS,
     DONE,
   }
-  
+
   public enum TodoPriority {
     LOW,
     MEDIUM,
@@ -25,8 +25,7 @@ public class TodoItemDto {
   }
 
   public TodoItemDto(
-    TodoItem todoItem
-  ) {
+      TodoItem todoItem) {
     this.id = todoItem.getId();
     this.name = todoItem.getName();
     this.status = TodoStatus.valueOf(todoItem.getStatus().name());
@@ -34,27 +33,35 @@ public class TodoItemDto {
     this.priority = TodoPriority.valueOf(todoItem.getPriority().name());
   }
 
-  public int getId() { return id; }
+  public int getId() {
+    return id;
+  }
 
   public String getName() {
     return name;
   }
 
-  public String getPriority() { 
-    return priority != null ? priority.name() : TodoPriority.MEDIUM.name(); 
+  public String getPriority() {
+    return priority != null ? priority.name() : TodoPriority.MEDIUM.name();
   }
 
-  public TodoStatus getStatus() { return status; }
+  public TodoStatus getStatus() {
+    return status;
+  }
 
-  public String getDescription() { return description; }
+  public String getDescription() {
+    return description;
+  }
 
-  public void setDescription(String description) { this.description = description; }
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
   public void setName(String name) {
     this.name = name;
   }
 
-  public void setPriority(String priority) { 
+  public void setPriority(String priority) {
     try {
       this.priority = TodoPriority.valueOf(priority);
     } catch (IllegalArgumentException e) {
