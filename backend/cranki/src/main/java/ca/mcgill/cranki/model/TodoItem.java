@@ -2,6 +2,9 @@ package ca.mcgill.cranki.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+import java.util.Set;
+
 @Entity
 public class TodoItem {
   @Id
@@ -16,6 +19,17 @@ public class TodoItem {
   @ManyToOne
   @JoinColumn(name = "todo_list_id")
   private TodoList todoList;
+
+  @OneToMany(mappedBy = "todoItem", cascade = CascadeType.REMOVE)
+  private Set<SpecificProperty> specificProperties;
+
+  public Set<SpecificProperty> getSpecificProperties() {
+    return specificProperties;
+  }
+
+  public void setSpecificProperties(Set<SpecificProperty> specificProperties) {
+    this.specificProperties = specificProperties;
+  }
 
   public enum TodoStatus {
     NOT_DONE,

@@ -4,6 +4,7 @@ import ca.mcgill.cranki.controller.TodoItemController;
 import ca.mcgill.cranki.dto.TodoItemDto;
 import ca.mcgill.cranki.model.TodoItem;
 import ca.mcgill.cranki.model.TodoList;
+import ca.mcgill.cranki.repository.PropertyRepository;
 import ca.mcgill.cranki.repository.TodoItemRepository;
 import ca.mcgill.cranki.repository.TodoListRepository;
 import io.cucumber.datatable.DataTable;
@@ -30,12 +31,15 @@ public class createTodoItemStepDefs {
     private TodoListRepository todoListRepository;
 
     @Autowired
+    private PropertyRepository propertyRepository;
+
+    @Autowired
     private TodoItemController todoItemController;
 
     private ResponseEntity<Object> controllerResponse;
 
+
     private void clearDatabase() {
-        todoItemRepository.deleteAll();
         todoListRepository.deleteAll();
     }
 
