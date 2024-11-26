@@ -1,14 +1,26 @@
 import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "./components/ui/table";
-import TodoDetailView from "./components/TodoDetailView"; // Import the detail view component
 
 // Define the shape of a single todo item
+interface PropertyValue {
+  id: number;
+  value: string;
+  propertyId: number;
+}
+
+interface TodoItemSpecificPropertyValues {
+  id: number;
+  name: string;
+  type: string;
+  values: PropertyValue[];
+}
+
 interface TodoItem {
   id: number;
   name: string;
   description: string;
   status: "NOT_DONE" | "DONE" | "IN_PROGRESS";
-  propertyValues: { [key: string]: string }; // Use propertyValues field
+  propertyValues: TodoItemSpecificPropertyValues[];
 }
 
 interface Property {
@@ -44,6 +56,7 @@ function App() {
       });
 
       const propertiesData: Property[] = await Promise.all(propertyPromises);
+      console.log(propertiesData);
       setProperties(propertiesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch properties");
@@ -239,23 +252,30 @@ function App() {
         throw new Error(errorText);
       }
 
-      // Update local state with new property value
+      // Fetch the updated todo item
+      const updatedTodoResponse = await fetch(`http://localhost:8080/todoItem/${todoId}`);
+      if (!updatedTodoResponse.ok) {
+        const errorText = await updatedTodoResponse.text();
+        throw new Error(errorText);
+      }
+      const updatedTodo: TodoItem = await updatedTodoResponse.json();
+
+      // Update local state with the updated todo item
       setTodos((prev) =>
-        prev.map((todo) =>
-          todo.id === todoId
-            ? {
-              ...todo,
-              propertyValues: {
-                ...todo.propertyValues,
-                [properties.find((p) => p.id === propertyId)?.name || ""]: editedPropertyValue,
-              },
-            }
-            : todo
-        )
+        prev.map((todo) => (todo.id === todoId ? updatedTodo : todo))
       );
       setEditingProperty(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update property value");
+    }
+  };
+
+  const handlePropertyKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, todoId: number, propertyId: number) => {
+    if (e.key === "Enter") {
+      handlePropertyValueSubmit(todoId, propertyId);
+    } else if (e.key === "Escape") {
+      setEditingProperty(null);
+      setEditedPropertyValue("");
     }
   };
 
@@ -397,30 +417,34 @@ function App() {
                         {todo.status}
                       </span>
                     </TableCell>
-                    {properties.map((property) => (
-                      <TableCell
-                        key={property.id}
-                        className="text-center cursor-pointer hover:bg-gray-50"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent row click from opening detail view
-                          setEditingProperty({ todoId: todo.id, propertyId: property.id });
-                          setEditedPropertyValue(todo.propertyValues?.[property.name] || "");
-                        }}
-                      >
-                        {editingProperty?.todoId === todo.id && editingProperty?.propertyId === property.id ? (
-                          <input
-                            type="text"
-                            value={editedPropertyValue}
-                            onChange={(e) => setEditedPropertyValue(e.target.value)}
-                            onBlur={() => handlePropertyValueSubmit(todo.id, property.id)}
-                            className="w-full px-2 py-1 text-center border rounded"
-                            autoFocus
-                          />
-                        ) : (
-                          todo.propertyValues?.[property.name] || ""
-                        )}
-                      </TableCell>
-                    ))}
+                    {properties.map((property) => {
+                      const propertyValue = Array.isArray(todo.propertyValues) ? todo.propertyValues.find(pv => pv.id === property.id) : null;
+                      return (
+                        <TableCell
+                          key={property.id}
+                          className="text-center cursor-pointer hover:bg-gray-50"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click from opening detail view
+                            setEditingProperty({ todoId: todo.id, propertyId: property.id });
+                            setEditedPropertyValue(propertyValue?.values[0]?.value || "");
+                          }}
+                        >
+                          {editingProperty?.todoId === todo.id && editingProperty?.propertyId === property.id ? (
+                            <input
+                              type="text"
+                              value={editedPropertyValue}
+                              onChange={(e) => setEditedPropertyValue(e.target.value)}
+                              onKeyDown={(e) => handlePropertyKeyPress(e, todo.id, property.id)}
+                              onBlur={() => handlePropertyValueSubmit(todo.id, property.id)}
+                              className="w-full px-2 py-1 text-center border rounded"
+                              autoFocus
+                            />
+                          ) : (
+                            propertyValue?.values[0]?.value || ""
+                          )}
+                        </TableCell>
+                      );
+                    })}
                     <TableCell className="text-center">
                       <button
                         onClick={(e) => {
