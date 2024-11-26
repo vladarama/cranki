@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { TableRow, TableCell } from "./ui/table";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -19,6 +19,28 @@ interface TodoItemProps {
   onNameChange: (name: string) => void;
   onNameSubmit: () => void;
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  propertyValues: TodoItemSpecificPropertyValues[];
+  properties: Property[];
+  onPropertyValueSubmit: (todoId: number, propertyId: number, value: string) => void;
+  onPropertyKeyPress: (e: React.KeyboardEvent<HTMLInputElement>, todoId: number, propertyId: number) => void;
+}
+
+interface TodoItemSpecificPropertyValues {
+  id: number;
+  name: string;
+  type: string;
+  values: PropertyValue[];
+}
+
+interface PropertyValue {
+  id: number;
+  value: string;
+  propertyId: number;
+}
+
+interface Property {
+  id: number;
+  name: string;
 }
 
 const TodoItem: React.FC<TodoItemProps> = ({
@@ -35,6 +57,10 @@ const TodoItem: React.FC<TodoItemProps> = ({
   onNameChange,
   onNameSubmit,
   onKeyPress,
+  propertyValues,
+  properties,
+  onPropertyValueSubmit,
+  onPropertyKeyPress,
 }) => {
   const {
     attributes,
@@ -50,6 +76,9 @@ const TodoItem: React.FC<TodoItemProps> = ({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  const [editingProperty, setEditingProperty] = useState<{ propertyId: number, value: string } | null>(null);
+  const [editedPropertyValue, setEditedPropertyValue] = useState("");
 
   return (
     <TableRow ref={setNodeRef} style={style}>
@@ -83,13 +112,12 @@ const TodoItem: React.FC<TodoItemProps> = ({
       </TableCell>
       <TableCell className="text-center">
         <span
-          className={`px-3 py-1 rounded-full text-sm ${
-            status === "DONE"
-              ? "bg-green-100 text-green-800"
-              : status === "IN_PROGRESS"
+          className={`px-3 py-1 rounded-full text-sm ${status === "DONE"
+            ? "bg-green-100 text-green-800"
+            : status === "IN_PROGRESS"
               ? "bg-yellow-100 text-yellow-800"
               : "bg-gray-100 text-gray-800"
-          }`}
+            }`}
         >
           {status}
         </span>
@@ -100,19 +128,46 @@ const TodoItem: React.FC<TodoItemProps> = ({
           onChange={(e) =>
             onPriorityChange(e.target.value as "LOW" | "MEDIUM" | "HIGH")
           }
-          className={`px-3 py-1 rounded-full text-sm ${
-            priority === "HIGH"
-              ? "bg-red-100 text-red-800"
-              : priority === "MEDIUM"
+          className={`px-3 py-1 rounded-full text-sm ${priority === "HIGH"
+            ? "bg-red-100 text-red-800"
+            : priority === "MEDIUM"
               ? "bg-yellow-100 text-yellow-800"
               : "bg-blue-100 text-blue-800"
-          }`}
+            }`}
         >
           <option value="LOW">LOW</option>
           <option value="MEDIUM">MEDIUM</option>
           <option value="HIGH">HIGH</option>
         </select>
       </TableCell>
+      {properties.map((property) => {
+        const propertyValue = propertyValues.find(pv => pv.id === property.id)?.values[0]?.value || "";
+        return (
+          <TableCell
+            key={property.id}
+            className="text-center cursor-pointer hover:bg-gray-50"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent row click from opening detail view
+              setEditingProperty({ propertyId: property.id, value: propertyValue });
+              setEditedPropertyValue(propertyValue);
+            }}
+          >
+            {editingProperty?.propertyId === property.id ? (
+              <input
+                type="text"
+                value={editedPropertyValue}
+                onChange={(e) => setEditedPropertyValue(e.target.value)}
+                onKeyDown={(e) => onPropertyKeyPress(e, id, property.id)}
+                onBlur={() => onPropertyValueSubmit(id, property.id, editedPropertyValue)}
+                className="w-full px-2 py-1 text-center border rounded"
+                autoFocus
+              />
+            ) : (
+              propertyValue
+            )}
+          </TableCell>
+        );
+      })}
       <TableCell className="text-center">
         <button
           onClick={onStatusToggle}

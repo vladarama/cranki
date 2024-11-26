@@ -417,7 +417,7 @@ function App() {
   };
 
   // Function to handle property value submission
-  const handlePropertyValueSubmit = async (todoId: number, propertyId: number) => {
+  const handlePropertyValueSubmit = async (todoId: number, propertyId: number, value: string) => {
     try {
       const response = await fetch(`http://localhost:8080/todoItem/${todoId}/properties/value`, {
         method: "PUT",
@@ -428,7 +428,7 @@ function App() {
           propertyId: propertyId,
           type: "LITERAL", // Assuming type is LITERAL, adjust as needed
           valueId: null,
-          value: editedPropertyValue,
+          value: value,
         }),
       });
 
@@ -449,7 +449,6 @@ function App() {
       setTodos((prev) =>
         prev.map((todo) => (todo.id === todoId ? updatedTodo : todo))
       );
-      setEditingProperty(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update property value");
     }
@@ -457,10 +456,9 @@ function App() {
 
   const handlePropertyKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, todoId: number, propertyId: number) => {
     if (e.key === "Enter") {
-      handlePropertyValueSubmit(todoId, propertyId);
+      handlePropertyValueSubmit(todoId, propertyId, e.currentTarget.value);
     } else if (e.key === "Escape") {
-      setEditingProperty(null);
-      setEditedPropertyValue("");
+      // Handle escape key if needed
     }
   };
 
@@ -665,6 +663,8 @@ function App() {
                       <TodoItem
                         key={todo.id}
                         {...todo}
+                        properties={properties}
+                        propertyValues={todo.propertyValues}
                         isEditing={isEditing === todo.id}
                         editedName={editedName}
                         onStatusToggle={() => toggleStatus(todo.id)}
@@ -679,7 +679,8 @@ function App() {
                         onNameChange={setEditedName}
                         onNameSubmit={() => handleNameSubmit(todo.id)}
                         onKeyPress={(e) => handleKeyPress(e, todo.id, "name")}
-                        onRowClick={() => setSelectedTodo(todo)}
+                        onPropertyValueSubmit={handlePropertyValueSubmit}
+                        onPropertyKeyPress={handlePropertyKeyPress}
                       />
                     ))}
                   </SortableContext>
@@ -785,10 +786,10 @@ function App() {
                 <strong>Priority:</strong>{" "}
                 <span
                   className={`px-3 py-1 rounded-full text-sm ${selectedTodo.priority === "HIGH"
-                      ? "bg-red-100 text-red-800"
-                      : selectedTodo.priority === "MEDIUM"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-green-100 text-green-800"
+                    ? "bg-red-100 text-red-800"
+                    : selectedTodo.priority === "MEDIUM"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-green-100 text-green-800"
                     }`}
                 >
                   {selectedTodo.priority}
