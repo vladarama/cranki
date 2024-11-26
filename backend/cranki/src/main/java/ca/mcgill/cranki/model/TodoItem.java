@@ -13,6 +13,7 @@ public class TodoItem {
 
   private String name;
   private TodoStatus status;
+  private TodoPriority priority;
   private String description;
   //filter todo
   private String literalPropertyValue; // for storing category
@@ -38,6 +39,12 @@ public class TodoItem {
     DONE,
   }
 
+  public enum TodoPriority {
+    LOW,
+    MEDIUM,
+    HIGH,
+  }
+
   // Default no-argument constructor for JPA
   public TodoItem() {
   }
@@ -57,6 +64,14 @@ public class TodoItem {
 
   public void setStatus(TodoStatus status) {
     this.status = status;
+  }
+
+  public TodoPriority getPriority() {
+    return priority;
+  }
+
+  public void setPriority(TodoPriority priority) {
+    this.priority = priority;
   }
 
   public int getId() {
@@ -100,4 +115,3 @@ public class TodoItem {
         this.literalPropertyValue = literalPropertyValue;
     }
 }
-

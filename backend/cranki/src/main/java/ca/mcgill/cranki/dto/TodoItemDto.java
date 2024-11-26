@@ -10,6 +10,9 @@ public class TodoItemDto {
   private String name;
   private TodoStatus status;
   private String description;
+
+  private TodoPriority priority;
+  
   private List<TodoItemSpecificPropertyValues> propertyValues;
 
   public List<TodoItemSpecificPropertyValues> getPropertyValues() {
@@ -29,12 +32,17 @@ public class TodoItemDto {
     DONE,
   }
 
+  public enum TodoPriority {
+    LOW,
+    MEDIUM,
+    HIGH,
+  }
+
   public TodoItemDto() {
   }
 
   public TodoItemDto(
-    TodoItem todoItem
-  ) {
+      TodoItem todoItem) {
     this.id = todoItem.getId();
     this.name = todoItem.getName();
     this.status = todoItem.getStatus() != null ? TodoStatus.valueOf(todoItem.getStatus().name()) : TodoStatus.NOT_DONE;
@@ -49,21 +57,42 @@ public class TodoItemDto {
             ))
             .toList() : 
         Collections.emptyList();
+    this.priority = todoItem.getPriority() != null ? TodoPriority.valueOf(todoItem.getPriority().name()) : TodoPriority.LOW;
   }
 
-  public int getId() { return id;}
+  public int getId() {
+    return id;
+  }
 
   public String getName() {
     return name;
   }
 
-  public TodoStatus getStatus() { return status; }
+  public String getPriority() {
+    return priority != null ? priority.name() : TodoPriority.MEDIUM.name();
+  }
 
-  public String getDescription() { return description; }
+  public TodoStatus getStatus() {
+    return status;
+  }
 
-  public void setDescription(String description) { this.description = description; }
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public void setPriority(String priority) {
+    try {
+      this.priority = TodoPriority.valueOf(priority);
+    } catch (IllegalArgumentException e) {
+      this.priority = TodoPriority.MEDIUM;
+    }
   }
 }
