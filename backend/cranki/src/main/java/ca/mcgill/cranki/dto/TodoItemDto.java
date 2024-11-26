@@ -46,7 +46,7 @@ public class TodoItemDto {
     this.name = todoItem.getName();
     this.status = todoItem.getStatus() != null ? TodoStatus.valueOf(todoItem.getStatus().name()) : TodoStatus.NOT_DONE;
     this.description = todoItem.getDescription();
-    this.priority = TodoPriority.valueOf(todoItem.getPriority().name());
+    this.priority = todoItem.getPriority() != null ? TodoPriority.valueOf(todoItem.getPriority().name()) : TodoPriority.LOW;
   }
 
   public int getId() {
