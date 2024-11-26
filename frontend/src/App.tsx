@@ -1,5 +1,5 @@
-import {useEffect, useState} from "react";
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "./components/ui/table";
+import { useEffect, useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "./components/ui/table";
 import TodoDetailView from "./components/TodoDetailView"; // Import the detail view component
 
 // Define the shape of a single todo item
@@ -8,17 +8,38 @@ interface TodoItem {
   name: string;
   description: string;
   status: "NOT_DONE" | "DONE" | "IN_PROGRESS";
+  properties: { [key: string]: string }; // Add properties field
+}
+
+interface Property {
+  id: number;
+  name: string;
 }
 
 function App() {
   // State for multiple todo items
   const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]); // State for properties
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editedName, setEditedName] = useState("");
   const [newTodo, setNewTodo] = useState({ name: "", description: "" });
   const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null); // New state for selected todo
+  const [newProperty, setNewProperty] = useState({ name: "", type: "LITERAL" });
+
+  // Fetch properties for the todo list
+  const fetchProperties = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/todolist/Tasks/properties");
+      if (!response.ok) throw new Error("Failed to fetch properties");
+      const data: Property[] = await response.json();
+      console.log(data)
+      setProperties(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch properties");
+    }
+  };
 
   useEffect(() => {
     // Fetch multiple todo items
@@ -36,6 +57,7 @@ function App() {
     };
 
     fetchTodos();
+    fetchProperties();
   }, []);
 
   // Handle adding a new todo item
@@ -50,7 +72,7 @@ function App() {
         },
         body: JSON.stringify(newTodo),
       });
-  
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText);
@@ -61,6 +83,35 @@ function App() {
       setNewTodo({ name: "", description: "" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create todo");
+    }
+  };
+
+  // Function to handle adding a new property
+  const handleAddProperty = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/property", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newProperty.name,
+          type: newProperty.type,
+          todoListId: 4, // Assuming the todo list ID is 1, change as needed
+          values: [] // Add values field if needed
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      // Refresh properties after adding new property
+      fetchProperties();
+      setNewProperty({ name: "", type: "LITERAL" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create property");
     }
   };
 
@@ -102,8 +153,8 @@ function App() {
       todo.status === "NOT_DONE"
         ? "IN_PROGRESS"
         : todo.status === "IN_PROGRESS"
-        ? "DONE"
-        : "NOT_DONE";
+          ? "DONE"
+          : "NOT_DONE";
 
     try {
       const response = await fetch(
@@ -209,6 +260,36 @@ function App() {
             </button>
           </div>
         </form>
+
+        {/* Add Property Form */}
+        <div className="mb-6">
+          <div className="flex justify-center gap-4 mb-4">
+            <input
+              type="text"
+              placeholder="Property Name"
+              value={newProperty.name}
+              onChange={(e) => setNewProperty({ ...newProperty, name: e.target.value })}
+              className="px-3 py-2 border rounded-md"
+              required
+            />
+            <select
+              value={newProperty.type}
+              onChange={(e) => setNewProperty({ ...newProperty, type: e.target.value })}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="LITERAL">Literal</option>
+              <option value="MULTISELECT">MultiSelect</option>
+              <option value="SINGLE_SELECT">Single Select</option>
+            </select>
+            <button
+              onClick={handleAddProperty}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Add Property
+            </button>
+          </div>
+        </div>
+
         {/* Todo Item List*/}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
@@ -221,48 +302,55 @@ function App() {
                   <TableHead className="text-center">ID</TableHead>
                   <TableHead className="text-center">Name</TableHead>
                   <TableHead className="text-center">Status</TableHead>
+                  {properties.map((property) => (
+                    <TableHead key={property.id} className="text-center">{property.name}</TableHead>
+                  ))}
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {todos.map((todo) => (
                   <TableRow key={todo.id} className="cursor-pointer" onClick={() => setSelectedTodo(todo)}>
-                  <TableCell className="text-center">{todo.id}</TableCell>
-                  <TableCell
-                    className="text-center cursor-pointer hover:bg-gray-50"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent row click from opening detail view
-                      setIsEditing(todo.id);
-                      setEditedName(todo.name);
-                    }}
-                  >
-                    {isEditing === todo.id ? (
-                      <input
-                        type="text"
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        onKeyDown={(e) => handleKeyPress(e, todo.id)}
-                        onBlur={() => handleNameSubmit(todo.id)}
-                        className="w-full px-2 py-1 text-center border rounded"
-                        autoFocus
-                      />
-                    ) : (
-                      <span className="hover:text-blue-600">{todo.name}</span>
-                    )}
-                  </TableCell>
+                    <TableCell className="text-center">{todo.id}</TableCell>
+                    <TableCell
+                      className="text-center cursor-pointer hover:bg-gray-50"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent row click from opening detail view
+                        setIsEditing(todo.id);
+                        setEditedName(todo.name);
+                      }}
+                    >
+                      {isEditing === todo.id ? (
+                        <input
+                          type="text"
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                          onKeyDown={(e) => handleKeyPress(e, todo.id)}
+                          onBlur={() => handleNameSubmit(todo.id)}
+                          className="w-full px-2 py-1 text-center border rounded"
+                          autoFocus
+                        />
+                      ) : (
+                        <span className="hover:text-blue-600">{todo.name}</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-center">
                       <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          todo.status === "DONE"
-                            ? "bg-green-100 text-green-800"
-                            : todo.status === "IN_PROGRESS"
+                        className={`px-3 py-1 rounded-full text-sm ${todo.status === "DONE"
+                          ? "bg-green-100 text-green-800"
+                          : todo.status === "IN_PROGRESS"
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-gray-100 text-gray-800"
-                        }`}
+                          }`}
                       >
                         {todo.status}
                       </span>
                     </TableCell>
+                    {/* {properties.map((property) => (
+                      <TableCell key={property.id} className="text-center">
+                        {todo.properties[property.name] || ""}
+                      </TableCell>
+                    ))} */}
                     <TableCell className="text-center">
                       <button
                         onClick={(e) => {
@@ -287,7 +375,7 @@ function App() {
                     </TableCell>
                   </TableRow>
                 ))}
-           </TableBody>
+              </TableBody>
             </Table>
           </div>
         </div>
@@ -312,13 +400,12 @@ function App() {
               <p className="mb-4">
                 <strong>Status:</strong>{" "}
                 <span
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    selectedTodo.status === "DONE"
-                      ? "bg-green-100 text-green-800"
-                      : selectedTodo.status === "IN_PROGRESS"
+                  className={`px-3 py-1 rounded-full text-sm ${selectedTodo.status === "DONE"
+                    ? "bg-green-100 text-green-800"
+                    : selectedTodo.status === "IN_PROGRESS"
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-gray-100 text-gray-800"
-                  }`}
+                    }`}
                 >
                   {selectedTodo.status}
                 </span>
@@ -326,6 +413,11 @@ function App() {
               <p className="mb-4">
                 <strong>Description:</strong> {selectedTodo.description}
               </p>
+              {/* {properties.map((property) => (
+                <p key={property.id} className="mb-4">
+                  <strong>{property.name}:</strong> {selectedTodo.properties[property.name] || ""}
+                </p>
+              ))} */}
             </div>
           </div>
         </div>
