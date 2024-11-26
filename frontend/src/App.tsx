@@ -15,8 +15,11 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<number | null>(null);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedName, setEditedName] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
   const [newTodo, setNewTodo] = useState({ name: "", description: "" });
+  const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null); // New state for selected todo
 
   // State for filtering
   const [filterProperty, setFilterProperty] = useState<string>("literalPropertyValue");
@@ -116,6 +119,40 @@ function App() {
     }
   };
 
+  const handleDescriptionSubmit = async (id: number, newDescription: string) => {
+    if (!todos) return;
+
+    try {
+      const response = await fetch(
+          `http://localhost:8080/todoItem/${id}/updateDescription`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ description: newDescription }),
+          }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      setTodos((prev) =>
+          prev.map((item) =>
+              item.id === id ? { ...item, description: newDescription } : item
+          )
+      );
+      setSelectedTodo((prev) =>
+          prev ? { ...prev, description: newDescription } : null
+      );
+      setIsEditingDescription(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update description");
+    }
+  };
+
   // Toggle the status of a todo item
   const toggleStatus = async (id: number) => {
     const todo = todos.find((item) => item.id === id);
@@ -170,13 +207,21 @@ function App() {
       setError(err instanceof Error ? err.message : "Failed to delete todo");
     }
   };
+
   // Handle key press events for the edit input
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number, type: string) => {
     if (e.key === "Enter") {
-      handleNameSubmit(id);
+      if (type === "name") {
+        handleNameSubmit(id);
+      }
+      else if (type === "description") {
+        handleDescriptionSubmit(id, editedDescription);
+      }
     } else if (e.key === "Escape") {
       setIsEditing(null);
       setEditedName("");
+      setIsEditingDescription(false);
+      setEditedDescription("");
     }
   };
 
@@ -276,29 +321,30 @@ function App() {
               </TableHeader>
               <TableBody>
                 {todos.map((todo) => (
-                  <TableRow key={todo.id}>
-                    <TableCell className="text-center">{todo.id}</TableCell>
-                    <TableCell
-                      className="text-center cursor-pointer hover:bg-gray-50"
-                      onClick={() => {
-                        setIsEditing(todo.id);
-                        setEditedName(todo.name);
-                      }}
-                    >
-                      {isEditing === todo.id ? (
-                        <input
-                          type="text"
-                          value={editedName}
-                          onChange={(e) => setEditedName(e.target.value)}
-                          onKeyDown={(e) => handleKeyPress(e, todo.id)}
-                          onBlur={() => handleNameSubmit(todo.id)}
-                          className="w-full px-2 py-1 text-center border rounded"
-                          autoFocus
-                        />
-                      ) : (
-                        <span className="hover:text-blue-600">{todo.name}</span>
-                      )}
-                    </TableCell>
+                  <TableRow key={todo.id} className="cursor-pointer" onClick={() => setSelectedTodo(todo)}>
+                  <TableCell className="text-center">{todo.id}</TableCell>
+                  <TableCell
+                    className="text-center cursor-pointer hover:bg-gray-50"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent row click from opening detail view
+                      setIsEditing(todo.id);
+                      setEditedName(todo.name);
+                    }}
+                  >
+                    {isEditing === todo.id ? (
+                      <input
+                        type="text"
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, todo.id, "name")}
+                        onBlur={() => handleNameSubmit(todo.id)}
+                        className="w-full px-2 py-1 text-center border rounded"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="hover:text-blue-600">{todo.name}</span>
+                    )}
+                  </TableCell>
                     <TableCell className="text-center">
                       <span
                         className={`px-3 py-1 rounded-full text-sm ${
@@ -314,7 +360,10 @@ function App() {
                     </TableCell>
                     <TableCell className="text-center">
                       <button
-                        onClick={() => toggleStatus(todo.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleStatus(todo.id);
+                        }}
                         className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                       >
                         Toggle Status
@@ -322,7 +371,10 @@ function App() {
                     </TableCell>
                     <TableCell className="text-center">
                       <button
-                        onClick={() => handleDelete(todo.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(todo.id);
+                        }}
                         className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                       >
                         Delete
@@ -335,6 +387,70 @@ function App() {
           </div>
         </div>
       </div>
+      {selectedTodo && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+          <div className="p-8 bg-gray-100 shadow-lg rounded-lg text-center w-3/4 max-w-2xl">
+            <button
+              onClick={() => setSelectedTodo(null)}
+              className="text-red-500 hover:text-red-700 text-lg mb-6"
+            >
+              Close
+            </button>
+            <div className="text-3xl font-bold mb-4">Todo Details</div>
+            <div className="text-lg">
+              <p className="mb-4">
+                <strong>ID:</strong> {selectedTodo.id}
+              </p>
+              <p className="mb-4">
+                <strong>Name:</strong> {selectedTodo.name}
+              </p>
+              <p className="mb-4">
+                <strong>Status:</strong>{" "}
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    selectedTodo.status === "DONE"
+                      ? "bg-green-100 text-green-800"
+                      : selectedTodo.status === "IN_PROGRESS"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {selectedTodo.status}
+                </span>
+              </p>
+              <p className="mb-4">
+                <strong>Description:</strong>{" "}
+                <button
+                    onClick={() => {
+                      setIsEditingDescription(true)
+                      setEditedDescription(selectedTodo.description)
+                    }}
+                    className="ml-2 text-blue-500 hover:underline"
+                >
+                  Edit
+                </button>
+              </p>
+              <p className="mb-4">
+                {isEditingDescription ? (
+                    <input
+                        type="text"
+                        value={editedDescription}
+                        onChange={(e) => setEditedDescription(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, selectedTodo.id, "description")}
+                        onBlur={() => handleDescriptionSubmit(selectedTodo.id, editedDescription)}
+                        className="w-full px-2 py-1 text-center border rounded"
+                        autoFocus
+                    />
+                ) : (
+                    <span>{selectedTodo.description}</span>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 }
