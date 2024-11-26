@@ -303,26 +303,18 @@ function App() {
   // Function to handle property value submission
   const handlePropertyValueSubmit = async (todoId: number, propertyId: number) => {
     try {
-      const todo = todos.find((todo) => todo.id === todoId);
-      const propertyValue = todo?.propertyValues.find((pv) => pv.id === propertyId)?.values[0];
-
-      const response = await fetch(
-        propertyValue
-          ? `http://localhost:8080/property/${propertyValue.id}/value?value=${editedPropertyValue}`
-          : `http://localhost:8080/todoItem/${todoId}/properties/value`,
-        {
-          method: propertyValue ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: propertyValue ? null : JSON.stringify({
-            propertyId: propertyId,
-            type: "LITERAL", // Assuming type is LITERAL, adjust as needed
-            valueId: null,
-            value: editedPropertyValue,
-          }),
-        }
-      );
+      const response = await fetch(`http://localhost:8080/todoItem/${todoId}/properties/value`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          propertyId: propertyId,
+          type: "LITERAL", // Assuming type is LITERAL, adjust as needed
+          valueId: null,
+          value: editedPropertyValue,
+        }),
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
