@@ -23,6 +23,7 @@ interface TodoItemProps {
   properties: Property[];
   onPropertyValueSubmit: (todoId: number, propertyId: number, value: string) => void;
   onPropertyKeyPress: (e: React.KeyboardEvent<HTMLInputElement>, todoId: number, propertyId: number) => void;
+  onRowClick: () => void; // Add this line
 }
 
 interface TodoItemSpecificPropertyValues {
@@ -61,6 +62,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
   properties,
   onPropertyValueSubmit,
   onPropertyKeyPress,
+  onRowClick, // Add this line
 }) => {
   const {
     attributes,
@@ -81,7 +83,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
   const [editedPropertyValue, setEditedPropertyValue] = useState("");
 
   return (
-    <TableRow ref={setNodeRef} style={style}>
+    <TableRow ref={setNodeRef} style={style} onClick={onRowClick}>
       <TableCell className="w-[50px]">
         <button
           className="cursor-grab hover:bg-gray-100 p-1 rounded"

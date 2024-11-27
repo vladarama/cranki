@@ -626,9 +626,7 @@ function App() {
                   <TableHead className="text-center">ID</TableHead>
                   <TableHead className="text-center">Name</TableHead>
                   <TableHead className="text-center">Status</TableHead>
-                  {properties.map((property) => (
-                    <TableHead key={property.id} className="text-center">{property.name}</TableHead>
-                  ))}
+
                   <TableHead className="text-center">
                     <div className="flex items-center justify-center gap-2">
                       Priority
@@ -644,6 +642,9 @@ function App() {
                       </Button>
                     </div>
                   </TableHead>
+                  {properties.map((property) => (
+                    <TableHead key={property.id} className="text-center">{property.name}</TableHead>
+                  ))}
                   <TableHead className="text-center">Toggle Status</TableHead>
                   <TableHead className="text-center">View Details</TableHead>
                   <TableHead className="text-center">Delete</TableHead>
@@ -681,6 +682,7 @@ function App() {
                         onKeyPress={(e) => handleKeyPress(e, todo.id, "name")}
                         onPropertyValueSubmit={handlePropertyValueSubmit}
                         onPropertyKeyPress={handlePropertyKeyPress}
+                        onRowClick={() => setSelectedTodo(todo)} // Add this line
                       />
                     ))}
                   </SortableContext>
